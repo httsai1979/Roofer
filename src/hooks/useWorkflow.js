@@ -123,14 +123,21 @@ export const useWorkflow = () => {
         };
     }, [projectState.inputs, projectState.fixingSpec, projectState.project.variations]);
 
-    const applyVariation = useCallback((reason, extraCost) => {
+    const applyVariation = useCallback((reason, extraCost, photoUrl) => {
         setProjectState(prev => ({
             ...prev,
             project: {
                 ...prev.project,
                 variations: [
                     ...(prev.project.variations || []),
-                    { id: Date.now(), reason, extraCost, status: 'pending_approval' }
+                    {
+                        id: Date.now(),
+                        reason,
+                        extraCost,
+                        photoUrl,
+                        status: 'pending_approval',
+                        photoRequired: true
+                    }
                 ]
             }
         }));

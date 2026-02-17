@@ -25,7 +25,7 @@ function App() {
   } = useWorkflow();
 
   const [onboardingForm, setOnboardingForm] = useState({ name: '', registration_number: '' });
-  const [variationForm, setVariationForm] = useState({ reason: '', cost: '' });
+  const [variationForm, setVariationForm] = useState({ reason: '', cost: '', photoUrl: null });
 
   const handlePostcodeSearch = () => {
     if (projectState.inputs.postcode) {
@@ -203,8 +203,25 @@ function App() {
                     type="number" className="input-field" placeholder="Cost (£)" style={{ maxWidth: '120px' }}
                     value={variationForm.cost} onChange={(e) => setVariationForm({ ...variationForm, cost: e.target.value })}
                   />
-                  <button className="button-primary" onClick={() => { applyVariation(variationForm.reason, parseFloat(variationForm.cost)); setVariationForm({ reason: '', cost: '' }); }}>
-                    Submit
+                </div>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <button
+                    className="button-primary"
+                    style={{ flex: 1, background: variationForm.photoUrl ? 'var(--color-success)' : 'white', color: variationForm.photoUrl ? 'white' : 'var(--color-primary)', border: '1px dashed var(--color-primary)' }}
+                    onClick={() => setVariationForm({ ...variationForm, photoUrl: 'https://images.unsplash.com/photo-1632759162353-19c9a07a0dfc?auto=format&fit=crop&q=80&w=200' })}
+                  >
+                    <Camera size={18} /> {variationForm.photoUrl ? 'Proof Photo Attached ✓' : 'Upload Proof Photo (Required)'}
+                  </button>
+                  <button
+                    className="button-primary"
+                    disabled={!variationForm.reason || !variationForm.cost || !variationForm.photoUrl}
+                    style={{ flex: 1 }}
+                    onClick={() => {
+                      applyVariation(variationForm.reason, parseFloat(variationForm.cost), variationForm.photoUrl);
+                      setVariationForm({ reason: '', cost: '', photoUrl: null });
+                    }}
+                  >
+                    Submit Variation Request
                   </button>
                 </div>
               </div>
@@ -213,9 +230,16 @@ function App() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {(projectState.project.variations || []).map(v => (
                   <div key={v.id} style={{ padding: '1.2rem', background: v.status === 'approved' ? '#f0fff4' : '#fff', borderRadius: '12px', border: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontWeight: 700 }}>£{v.extraCost.toLocaleString()} — {v.reason}</div>
-                      <div className="badge" style={{ marginTop: '0.4rem', fontSize: '0.7rem', display: 'inline-block' }}>{v.status.replace('_', ' ').toUpperCase()}</div>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                      {v.photoUrl && (
+                        <div style={{ width: '40px', height: '40px', background: '#eee', borderRadius: '4px', overflow: 'hidden', flexShrink: 0 }}>
+                          <img src={v.photoUrl} alt="proof" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                      )}
+                      <div>
+                        <div style={{ fontWeight: 700 }}>£{v.extraCost.toLocaleString()} — {v.reason}</div>
+                        <div className="badge" style={{ marginTop: '0.4rem', fontSize: '0.7rem', display: 'inline-block' }}>{v.status.replace('_', ' ').toUpperCase()}</div>
+                      </div>
                     </div>
                     {v.status === 'pending_approval' && (
                       <div style={{ display: 'flex', gap: '0.6rem' }}>
