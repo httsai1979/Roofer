@@ -335,14 +335,49 @@ function App() {
               </div>
             </div>
 
-            <div className="card" style={{ background: 'var(--color-primary)', color: 'white' }}>
-              <h4 style={{ color: 'white', marginTop: 0 }}>Golden Thread Status</h4>
-              <ul style={{ paddingLeft: '1.2rem', fontSize: '0.85rem', opacity: 0.9 }}>
-                <li>Contractor Certification: Verified</li>
-                <li>Material Standards: BS 5534 Compliant</li>
-                <li>Digital Audit Entries: {projectState.project.dailyLogs.length}</li>
-                <li>Building Safety Act: Records maintained (15yr policy)</li>
-              </ul>
+            <div className="card" style={{ background: '#f8fafc', borderLeft: '4px solid var(--color-primary)' }}>
+              <h4 style={{ marginTop: 0 }}>Project Timeline (Golden Thread)</h4>
+              <p style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginBottom: '1rem' }}>
+                Building Safety Act 2022: Permanent digital record of works.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {projectState.project.dailyLogs.length === 0 ? (
+                  <p style={{ fontSize: '0.85rem', fontStyle: 'italic', color: 'var(--color-muted)' }}>No entries yet. Timeline starts on first photo upload.</p>
+                ) : (
+                  projectState.project.dailyLogs.map((log, index) => (
+                    <div key={index} style={{
+                      display: 'flex',
+                      gap: '1rem',
+                      padding: '0.5rem',
+                      background: 'white',
+                      borderRadius: '8px',
+                      border: '1px solid #eee',
+                      alignItems: 'center'
+                    }}>
+                      <div style={{
+                        width: '50px',
+                        height: '50px',
+                        background: '#e2e8f0',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden'
+                      }}>
+                        <FileText size={20} color="#94a3b8" />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{log.date}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#27ae60', fontWeight: 600 }}>Status: {log.status}</div>
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>
+                        Photo Verified ✓
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </aside>
         </div>
