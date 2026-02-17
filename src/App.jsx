@@ -26,6 +26,8 @@ function App() {
 
   const [onboardingForm, setOnboardingForm] = useState({ name: '', registration_number: '' });
   const [variationForm, setVariationForm] = useState({ reason: '', cost: '', photoUrl: null });
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handlePostcodeSearch = () => {
     if (projectState.inputs.postcode) {
@@ -449,9 +451,62 @@ function App() {
               </div>
             </div>
 
-            <button className="button-primary" style={{ width: '100%', padding: '1.2rem', fontSize: '1.2rem' }} onClick={startProject}>
+            <button className="button-primary" style={{ width: '100%', padding: '1.2rem', fontSize: '1.2rem' }} onClick={() => setShowConfirmModal(true)}>
               Accept & Begin Live Tracking <ChevronRight size={24} />
             </button>
+
+            {/* Confirmation Modal Overlay */}
+            {showConfirmModal && (
+              <div style={{
+                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                backgroundColor: 'rgba(27, 48, 34, 0.8)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: 1000, padding: '1rem'
+              }}>
+                <div className="card" style={{ maxWidth: '500px', width: '100%', textAlign: 'center' }}>
+                  <ShieldCheck size={48} color="var(--color-primary)" style={{ margin: '0 auto 1rem' }} />
+                  <h2>Bilateral Agreement</h2>
+                  <p style={{ color: 'var(--color-muted)', fontSize: '0.95rem', textAlign: 'left', background: '#f8fafc', padding: '1rem', borderRadius: '8px' }}>
+                    I hereby accept the {projectState.documentType === 'BINDING_QUOTE' ? 'Fixed Binding Quote' : 'Project Estimate'} of <strong>£{quoteData.totalCost.toLocaleString()}</strong>.
+                    <br /><br />
+                    I understand that any "Variation Orders" (unexpected work) found during construction will be submitted as separate requests and will require my explicit digital approval prior to any price adjustment.
+                  </p>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 0', cursor: 'pointer', textAlign: 'left' }}>
+                    <input
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      style={{ width: '1.5rem', height: '1.5rem' }}
+                    />
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                      I agree to the Digital Work Authorization and CRA 2015 Terms.
+                    </span>
+                  </label>
+
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                    <button
+                      className="button-primary"
+                      style={{ flex: 1, background: '#cbd5e0', color: '#4a5568' }}
+                      onClick={() => setShowConfirmModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="button-primary"
+                      style={{ flex: 1 }}
+                      disabled={!agreedToTerms}
+                      onClick={() => {
+                        startProject();
+                        setShowConfirmModal(false);
+                      }}
+                    >
+                      Confirm Agreement
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div style={{ borderTop: '1px solid #eee', marginTop: '2rem', paddingTop: '1.5rem' }}>
               <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', marginBottom: '0.8rem' }}>
