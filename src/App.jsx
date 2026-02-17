@@ -16,7 +16,8 @@ function App() {
     releasePayment,
     updateChecklist,
     generateHandoverPack,
-    sendHandoverEmail
+    sendHandoverEmail,
+    resetProject
   } = useWorkflow();
 
   const [onboardingForm, setOnboardingForm] = useState({ name: '', registration_number: '' });
@@ -172,6 +173,9 @@ function App() {
                     )}
                   </div>
                 ))}
+              </div>
+              <div style={{ marginTop: '1rem', padding: '0.8rem', backgroundColor: '#fffbeb', borderRadius: '6px', border: '1px solid #fef3c7', fontSize: '0.75rem', color: '#92400e' }}>
+                <strong>Statutory Notice (CRA 2015):</strong> All payments are handled via protected escrow. Under the Consumer Rights Act 2015, services must be provided with reasonable care and skill. Funds are released only upon verification of major milestones.
               </div>
             </div>
 
@@ -547,9 +551,15 @@ function App() {
         </aside>
       </div>
 
-      <footer style={{ marginTop: '4rem', textAlign: 'center', color: 'var(--color-muted)', fontSize: '0.8rem' }}>
+      <footer style={{ marginTop: '4rem', paddingBottom: '2rem', textAlign: 'center', color: 'var(--color-muted)', fontSize: '0.8rem' }}>
         <p>RoofTrust UK © 2026 • Professional Standard for British Roofing</p>
         <p>This platform uses automated logic to enforce BS 5534, Part L, and the Building Safety Act 2022.</p>
+        <button
+          onClick={resetProject}
+          style={{ marginTop: '1rem', background: 'none', border: '1px solid #eee', color: '#999', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer' }}
+        >
+          Reset Project Data (Clear Cache)
+        </button>
       </footer>
     </div>
   );

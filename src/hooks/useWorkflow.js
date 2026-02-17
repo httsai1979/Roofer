@@ -1,53 +1,65 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import rules from '../config/businessRules.json';
 
+const STORAGE_KEY = 'rooftrust_project_state';
+
+const INITIAL_STATE = {
+    contractor: {
+        name: '',
+        registration_number: '',
+        isVerified: false,
+        onboardingCompleted: false,
+        verificationStatus: 'unverified',
+        credentialImage: null,
+    },
+    phase: 'phase_0_onboarding',
+    inputs: {
+        postcode: '',
+        building_height_meters: 0,
+        roof_pitch_degrees: 0,
+        loft_inspection_accessible: false,
+        site_photos_count: 0,
+        roof_area_sqm: 0,
+    },
+    project: {
+        startDate: null,
+        dailyLogs: [],
+        lastUpdateTimestamp: null,
+        paymentStages: [
+            { id: 'deposit', label: '30% Deposit (Escrow)', percent: 30, status: 'pending' },
+            { id: 'mid', label: '40% Interim Payment', percent: 40, status: 'pending' },
+            { id: 'final', label: '30% Final Balance', percent: 30, status: 'pending' },
+        ],
+        completionChecklist: [
+            { id: 'c1', label: 'Site cleared of debris', checked: false },
+            { id: 'c2', label: 'Gutters checked and functional', checked: false },
+            { id: 'c3', label: 'All tiles properly fixed (BS 5534)', checked: false },
+            { id: 'c4', label: 'Photographic evidence verified', checked: false },
+        ],
+        handoverPackGenerated: false,
+        handoverPackSent: false,
+    },
+    milestones: [],
+    weather: {
+        rain_mm: 0,
+        wind_mph: 0,
+        temp_c: 15,
+    },
+    documentType: 'NON_BINDING_ESTIMATE',
+    fixingSpec: null,
+    coolingOffActive: true,
+};
+
 export const useWorkflow = () => {
-    const [projectState, setProjectState] = useState({
-        contractor: {
-            name: '',
-            registration_number: '',
-            isVerified: false,
-            onboardingCompleted: false,
-            verificationStatus: 'unverified', // unverified, pending, verified
-            credentialImage: null,
-        },
-        phase: 'phase_0_onboarding', // onboarding, survey, tracking
-        inputs: {
-            postcode: '',
-            building_height_meters: 0,
-            roof_pitch_degrees: 0,
-            loft_inspection_accessible: false,
-            site_photos_count: 0,
-            roof_area_sqm: 0,
-        },
-        project: {
-            startDate: null,
-            dailyLogs: [], // { date, photoUploaded, status }
-            lastUpdateTimestamp: null,
-            paymentStages: [
-                { id: 'deposit', label: '30% Deposit (Escrow)', percent: 30, status: 'pending' },
-                { id: 'mid', label: '40% Interim Payment', percent: 40, status: 'pending' },
-                { id: 'final', label: '30% Final Balance', percent: 30, status: 'pending' },
-            ],
-            completionChecklist: [
-                { id: 'c1', label: 'Site cleared of debris', checked: false },
-                { id: 'c2', label: 'Gutters checked and functional', checked: false },
-                { id: 'c3', label: 'All tiles properly fixed (BS 5534)', checked: false },
-                { id: 'c4', label: 'Photographic evidence verified', checked: false },
-            ],
-            handoverPackGenerated: false,
-            handoverPackSent: false,
-        },
-        milestones: [],
-        weather: {
-            rain_mm: 0,
-            wind_mph: 0,
-            temp_c: 15,
-        },
-        documentType: 'NON_BINDING_ESTIMATE',
-        fixingSpec: null,
-        coolingOffActive: true, // New state for module 5
+    const [projectState, setProjectState] = useState(() => {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        return saved ? JSON.parse(saved) : INITIAL_STATE;
     });
+
+    // Sync to LocalStorage
+    useEffect(() => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(projectState));
+    }, [projectState]);
 
     const currentPhaseConfig = useMemo(() =>
         rules.workflows[projectState.phase] || {},
@@ -59,7 +71,6 @@ export const useWorkflow = () => {
             const newInputs = { ...prev.inputs, [key]: value };
             let newDocType = prev.documentType;
 
-            // Logic Gate: QUOTE_VS_ESTIMATE
             if (newInputs.loft_inspection_accessible && newInputs.site_photos_count >= 5) {
                 newDocType = 'BINDING_QUOTE';
             } else {
@@ -75,7 +86,6 @@ export const useWorkflow = () => {
     }, []);
 
     const calculateWindUplift = useCallback((postcode) => {
-        // Mocking query_bs5534_zone logic
         const zones = ['Zone 1', 'Zone 2', 'Zone 3', 'Zone 4', 'Zone 5'];
         const randomZone = zones[Math.floor(Math.random() * zones.length)];
 
@@ -89,7 +99,6 @@ export const useWorkflow = () => {
             ...prev,
             fixingSpec: spec
         }));
-
         return spec;
     }, []);
 
@@ -97,14 +106,10 @@ export const useWorkflow = () => {
         const { building_height_meters, roof_pitch_degrees, roof_area_sqm } = projectState.inputs;
         const fixingSpec = projectState.fixingSpec;
 
-        // Simplified calculation logic
-        const baseRate = 120; // £ per sqm
+        const baseRate = 120;
         const area = roof_area_sqm || 0;
-
-        // Complexity Factors
         const complexityFactor = (building_height_meters > 5 ? 1.2 : 1) * (roof_pitch_degrees > 35 ? 1.15 : 1);
 
-        // BS 5534 Wind Zone Factor: +15% for Zone 3, 4, or 5
         let windZoneFactor = 1;
         if (fixingSpec && (fixingSpec.zone === 'Zone 3' || fixingSpec.zone === 'Zone 4' || fixingSpec.zone === 'Zone 5')) {
             windZoneFactor = 1.15;
@@ -116,7 +121,7 @@ export const useWorkflow = () => {
         return {
             totalCost,
             durationDays,
-            weatherContingencyDays: Math.ceil(durationDays * 0.25) // 25% for UK weather
+            weatherContingencyDays: Math.ceil(durationDays * 0.25)
         };
     }, [projectState.inputs, projectState.fixingSpec]);
 
@@ -133,14 +138,12 @@ export const useWorkflow = () => {
     }, [projectState.weather]);
 
     const completeOnboarding = useCallback((contractorData) => {
-        // Registration numbers starting with "NFRC-" trigger pending verification
         const isEligible = contractorData.registration_number.toUpperCase().startsWith('NFRC-');
-
         setProjectState(prev => ({
             ...prev,
             contractor: {
                 ...contractorData,
-                isVerified: false, // Remains false until manual approval/check
+                isVerified: false,
                 verificationStatus: isEligible ? 'pending' : 'unverified',
                 onboardingCompleted: true,
             },
@@ -151,10 +154,7 @@ export const useWorkflow = () => {
     const uploadCredential = useCallback((imageUrl) => {
         setProjectState(prev => ({
             ...prev,
-            contractor: {
-                ...prev.contractor,
-                credentialImage: imageUrl
-            }
+            contractor: { ...prev.contractor, credentialImage: imageUrl }
         }));
     }, []);
 
@@ -211,21 +211,20 @@ export const useWorkflow = () => {
     const generateHandoverPack = useCallback(() => {
         setProjectState(prev => ({
             ...prev,
-            project: {
-                ...prev.project,
-                handoverPackGenerated: true
-            }
+            project: { ...prev.project, handoverPackGenerated: true }
         }));
     }, []);
 
     const sendHandoverEmail = useCallback(() => {
         setProjectState(prev => ({
             ...prev,
-            project: {
-                ...prev.project,
-                handoverPackSent: true
-            }
+            project: { ...prev.project, handoverPackSent: true }
         }));
+    }, []);
+
+    const resetProject = useCallback(() => {
+        setProjectState(INITIAL_STATE);
+        localStorage.removeItem(STORAGE_KEY);
     }, []);
 
     return {
@@ -242,6 +241,7 @@ export const useWorkflow = () => {
         generateHandoverPack,
         sendHandoverEmail,
         uploadCredential,
+        resetProject,
         config: currentPhaseConfig,
     };
 };
