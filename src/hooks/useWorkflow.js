@@ -39,6 +39,7 @@ const INITIAL_STATE = {
         variations: [], // { id, reason, extraCost, status: 'pending_approval' | 'approved' | 'rejected' }
         handoverPackGenerated: false,
         handoverPackSent: false,
+        finalPaymentRequested: false,
     },
     milestones: [],
     weather: {
@@ -243,6 +244,14 @@ export const useWorkflow = () => {
         }));
     }, []);
 
+    const requestFinalPayment = useCallback(() => {
+        if (!projectState.project.handoverPackSent) return;
+        setProjectState(prev => ({
+            ...prev,
+            project: { ...prev.project, finalPaymentRequested: true }
+        }));
+    }, [projectState.project.handoverPackSent]);
+
     const resetProject = useCallback(() => {
         setProjectState(INITIAL_STATE);
         localStorage.removeItem(STORAGE_KEY);
@@ -261,6 +270,7 @@ export const useWorkflow = () => {
         updateChecklist,
         generateHandoverPack,
         sendHandoverEmail,
+        requestFinalPayment,
         uploadCredential,
         resetProject,
         applyVariation,

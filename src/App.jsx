@@ -17,6 +17,7 @@ function App() {
     updateChecklist,
     generateHandoverPack,
     sendHandoverEmail,
+    requestFinalPayment,
     resetProject,
     applyVariation,
     updateVariationStatus
@@ -112,7 +113,7 @@ function App() {
     const isOverdue = hoursSinceUpdate > 48;
     const allChecked = projectState.project.completionChecklist.every(item => item.checked);
     const finalBalanceReleased = projectState.project.paymentStages.find(s => s.id === 'final').status === 'released';
-    const canReleaseFinal = allChecked && projectState.project.handoverPackSent;
+    const canReleaseFinal = allChecked && projectState.project.handoverPackSent && projectState.project.finalPaymentRequested;
 
     return (
       <div className="roof-trust-container">
@@ -160,19 +161,26 @@ function App() {
                     {stage.status === 'released' ? (
                       <span style={{ color: '#27ae60', fontSize: '0.85rem', fontWeight: 700 }}>✓ RELEASED</span>
                     ) : (
-                      <button
-                        className="button-primary"
-                        style={{
-                          padding: '0.4rem 0.8rem',
-                          fontSize: '0.8rem',
-                          opacity: (stage.id === 'final' && !canReleaseFinal) ? 0.5 : 1,
-                          background: (stage.id === 'final' && !canReleaseFinal) ? '#cbd5e0' : 'var(--color-primary)'
-                        }}
-                        disabled={stage.id === 'final' && !canReleaseFinal}
-                        onClick={() => releasePayment(stage.id)}
-                      >
-                        {stage.id === 'final' && !canReleaseFinal ? 'Locked (Requires Handover)' : 'Release Funds'}
-                      </button>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                        <button
+                          className="button-primary"
+                          style={{
+                            padding: '0.4rem 0.8rem',
+                            fontSize: '0.8rem',
+                            opacity: (stage.id === 'final' && !canReleaseFinal) ? 0.5 : 1,
+                            background: (stage.id === 'final' && !canReleaseFinal) ? '#cbd5e0' : 'var(--color-primary)'
+                          }}
+                          disabled={stage.id === 'final' && !canReleaseFinal}
+                          onClick={() => releasePayment(stage.id)}
+                        >
+                          {stage.id === 'final' && !canReleaseFinal ? 'Locked' : 'Release Funds'}
+                        </button>
+                        {stage.id === 'final' && canReleaseFinal && (
+                          <span style={{ fontSize: '0.65rem', color: 'var(--color-muted)', textAlign: 'right', maxWidth: '200px' }}>
+                            * Clicking confirms receipt of digital handover pack & final approval.
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))}
@@ -229,9 +237,21 @@ function App() {
                     <Mail size={18} /> Email to Homeowner
                   </button>
                 </div>
-                {projectState.project.handoverPackSent && (
-                  <p style={{ color: '#27ae60', fontSize: '0.85rem', fontWeight: 700, marginTop: '1rem', textAlign: 'center' }}>
-                    ✓ Golden Thread PDF Sent. Final payment is now UNLOCKED.
+                {projectState.project.handoverPackSent && !projectState.project.finalPaymentRequested && (
+                  <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'white', borderRadius: '8px', border: '1px solid var(--color-primary)' }}>
+                    <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', fontWeight: 600 }}>Pack Sent. Now request final payment from the homeowner.</p>
+                    <button
+                      className="button-primary"
+                      style={{ width: '100%' }}
+                      onClick={requestFinalPayment}
+                    >
+                      Request Final Payment
+                    </button>
+                  </div>
+                )}
+                {projectState.project.finalPaymentRequested && !finalBalanceReleased && (
+                  <p style={{ color: 'var(--color-primary)', fontSize: '0.85rem', fontWeight: 700, marginTop: '1rem', textAlign: 'center' }}>
+                    ⌛ Final Payment Requested. Awaiting Homeowner Release.
                   </p>
                 )}
               </div>
