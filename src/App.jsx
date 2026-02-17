@@ -15,7 +15,8 @@ function App() {
     uploadDailyPhoto,
     releasePayment,
     updateChecklist,
-    generateHandoverPack
+    generateHandoverPack,
+    sendHandoverEmail
   } = useWorkflow();
 
   const [onboardingForm, setOnboardingForm] = useState({ name: '', registration_number: '' });
@@ -107,6 +108,7 @@ function App() {
     const isOverdue = hoursSinceUpdate > 48;
     const allChecked = projectState.project.completionChecklist.every(item => item.checked);
     const finalBalanceReleased = projectState.project.paymentStages.find(s => s.id === 'final').status === 'released';
+    const canReleaseFinal = allChecked && projectState.project.handoverPackSent;
 
     return (
       <div className="roof-trust-container">
@@ -156,11 +158,16 @@ function App() {
                     ) : (
                       <button
                         className="button-primary"
-                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', opacity: (stage.id === 'final' && !allChecked) ? 0.5 : 1 }}
-                        disabled={stage.id === 'final' && !allChecked}
+                        style={{
+                          padding: '0.4rem 0.8rem',
+                          fontSize: '0.8rem',
+                          opacity: (stage.id === 'final' && !canReleaseFinal) ? 0.5 : 1,
+                          background: (stage.id === 'final' && !canReleaseFinal) ? '#cbd5e0' : 'var(--color-primary)'
+                        }}
+                        disabled={stage.id === 'final' && !canReleaseFinal}
                         onClick={() => releasePayment(stage.id)}
                       >
-                        {stage.id === 'final' && !allChecked ? 'Locked' : 'Release Funds'}
+                        {stage.id === 'final' && !canReleaseFinal ? 'Locked (Requires Handover)' : 'Release Funds'}
                       </button>
                     )}
                   </div>
@@ -186,27 +193,47 @@ function App() {
               </div>
             </div>
 
-            {finalBalanceReleased && (
+            {allChecked && !finalBalanceReleased && (
               <div className="card" style={{ border: '2px solid var(--color-primary)', background: '#f0fff4' }}>
-                <h3 style={{ color: 'var(--color-primary)' }}>Golden Thread Compliance Pack</h3>
-                <p style={{ fontSize: '0.9rem' }}>All payments settled. Your permanent digital audit trail is now ready.</p>
+                <h3 style={{ color: 'var(--color-primary)' }}>Final Step: Golden Thread Delivery</h3>
+                <p style={{ fontSize: '0.9rem' }}>Checklist complete. You must now generate and send the digital audit trail to enable the final payment.</p>
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                   <button
                     className="button-primary"
                     onClick={generateHandoverPack}
                     style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                   >
-                    <Download size={18} /> Download Handover Pack (PDF)
+                    <Download size={18} /> Generate Pack
                   </button>
-                  <button className="button-primary" style={{ flex: 1, background: 'var(--color-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                  <button
+                    className="button-primary"
+                    onClick={sendHandoverEmail}
+                    disabled={!projectState.project.handoverPackGenerated}
+                    style={{
+                      flex: 1,
+                      background: 'var(--color-secondary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      opacity: projectState.project.handoverPackGenerated ? 1 : 0.6
+                    }}
+                  >
                     <Mail size={18} /> Email to Homeowner
                   </button>
                 </div>
-                {projectState.project.handoverPackGenerated && (
+                {projectState.project.handoverPackSent && (
                   <p style={{ color: '#27ae60', fontSize: '0.85rem', fontWeight: 700, marginTop: '1rem', textAlign: 'center' }}>
-                    ✓ Pack generated including: NFRC Certificate, Material Warranties, 15yr Liability Record.
+                    ✓ Golden Thread PDF Sent. Final payment is now UNLOCKED.
                   </p>
                 )}
+              </div>
+            )}
+
+            {finalBalanceReleased && (
+              <div className="card" style={{ border: '2px solid #27ae60', background: '#f0fff4' }}>
+                <h3 style={{ color: '#27ae60' }}>Project Fully Certified</h3>
+                <p style={{ fontSize: '0.9rem' }}>All payments settled and compliance records delivered. The "Golden Thread" has been secured for 15 years.</p>
               </div>
             )}
           </section>

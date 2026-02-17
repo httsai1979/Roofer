@@ -36,6 +36,7 @@ export const useWorkflow = () => {
                 { id: 'c4', label: 'Photographic evidence verified', checked: false },
             ],
             handoverPackGenerated: false,
+            handoverPackSent: false,
         },
         milestones: [],
         weather: {
@@ -217,6 +218,16 @@ export const useWorkflow = () => {
         }));
     }, []);
 
+    const sendHandoverEmail = useCallback(() => {
+        setProjectState(prev => ({
+            ...prev,
+            project: {
+                ...prev.project,
+                handoverPackSent: true
+            }
+        }));
+    }, []);
+
     return {
         projectState,
         updateInput,
@@ -229,6 +240,7 @@ export const useWorkflow = () => {
         releasePayment,
         updateChecklist,
         generateHandoverPack,
+        sendHandoverEmail,
         uploadCredential,
         config: currentPhaseConfig,
     };
