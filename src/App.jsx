@@ -120,11 +120,20 @@ function App() {
         </header>
 
         {isOverdue && (
-          <div style={{ background: '#fff3f3', border: '1px solid var(--color-warning)', padding: '1rem', borderRadius: '8px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <AlertTriangle color="var(--color-warning)" />
-            <div>
-              <strong>Update Overdue (&gt;48h):</strong>
-              <p style={{ margin: 0, fontSize: '0.9rem' }}>SMS notification sent to homeowner: "Work paused/delayed; weather monitoring active."</p>
+          <div style={{ background: '#fff3f3', border: '1px solid var(--color-warning)', padding: '1rem', borderRadius: '8px', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <AlertTriangle color="var(--color-warning)" />
+              <div>
+                <strong>Update Overdue (&gt;48h):</strong>
+                <p style={{ margin: 0, fontSize: '0.9rem' }}>SMS notification sent to homeowner: "Work paused/delayed; weather monitoring active."</p>
+              </div>
+            </div>
+            <div style={{ marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '6px', border: '1px dashed #feb2b2' }}>
+              <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-primary)' }}>Automated Delay Explanation (Sent to Homeowner):</p>
+              <p style={{ margin: '0.5rem 0 0', fontSize: '0.9rem', fontStyle: 'italic', color: '#4a5568' }}>
+                "Due to instability detected by the weather monitoring system, we have temporarily adjusted the schedule to protect the quality of your roof."
+              </p>
+              <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: 'var(--color-muted)' }}>* Generated automatically via RoofTrust Bilateral Transparency Protocol.</p>
             </div>
           </div>
         )}
