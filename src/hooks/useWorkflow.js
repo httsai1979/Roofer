@@ -8,6 +8,8 @@ export const useWorkflow = () => {
             registration_number: '',
             isVerified: false,
             onboardingCompleted: false,
+            verificationStatus: 'unverified', // unverified, pending, verified
+            credentialImage: null,
         },
         phase: 'phase_0_onboarding', // onboarding, survey, tracking
         inputs: {
@@ -130,16 +132,28 @@ export const useWorkflow = () => {
     }, [projectState.weather]);
 
     const completeOnboarding = useCallback((contractorData) => {
-        const isVerified = contractorData.registration_number.toUpperCase().startsWith('NFRC-');
+        // Registration numbers starting with "NFRC-" trigger pending verification
+        const isEligible = contractorData.registration_number.toUpperCase().startsWith('NFRC-');
 
         setProjectState(prev => ({
             ...prev,
             contractor: {
                 ...contractorData,
-                isVerified,
+                isVerified: false, // Remains false until manual approval/check
+                verificationStatus: isEligible ? 'pending' : 'unverified',
                 onboardingCompleted: true,
             },
             phase: 'phase_1_digital_survey'
+        }));
+    }, []);
+
+    const uploadCredential = useCallback((imageUrl) => {
+        setProjectState(prev => ({
+            ...prev,
+            contractor: {
+                ...prev.contractor,
+                credentialImage: imageUrl
+            }
         }));
     }, []);
 
@@ -215,6 +229,7 @@ export const useWorkflow = () => {
         releasePayment,
         updateChecklist,
         generateHandoverPack,
+        uploadCredential,
         config: currentPhaseConfig,
     };
 };

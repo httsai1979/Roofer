@@ -80,6 +80,18 @@ function App() {
                 * Verification is automated against national databases.
               </p>
             </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Certificate / License Copy</label>
+              <button
+                type="button"
+                className="button-primary"
+                style={{ width: '100%', background: 'white', color: 'var(--color-primary)', border: '1px dashed var(--color-primary)' }}
+                onClick={() => alert('Mock: Digital upload triggered. Metadata (Geotag/Timestamp) will be verified.')}
+              >
+                Upload Credential Copy (PDF/JPG)
+              </button>
+            </div>
             <button type="submit" className="button-primary" style={{ width: '100%' }}>
               Verify & Enter Dashboard
             </button>
@@ -255,8 +267,26 @@ function App() {
             <h1 style={{ margin: 0, fontSize: '2.5rem', letterSpacing: '-0.02em' }}>
               RoofTrust <span style={{ color: 'var(--color-accent)' }}>UK</span>
             </h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginTop: '0.5rem' }}>
               <span style={{ fontWeight: 600 }}>{projectState.contractor.name}</span>
+
+              {projectState.contractor.verificationStatus === 'pending' && (
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  color: 'var(--color-warning)',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  backgroundColor: '#fffbeb',
+                  padding: '2px 10px',
+                  borderRadius: '12px',
+                  border: '1px solid #fef3c7'
+                }}>
+                  <Info size={14} /> Verification Pending
+                </span>
+              )}
+
               {projectState.contractor.isVerified && (
                 <span style={{
                   display: 'inline-flex',
@@ -274,6 +304,18 @@ function App() {
                 </span>
               )}
             </div>
+
+            {projectState.contractor.verificationStatus === 'pending' && (
+              <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', marginTop: '0.5rem' }}>
+                Note to Homeowner: Credentials are being verified.
+                <button
+                  onClick={() => alert('Viewing uploaded credential copy...')}
+                  style={{ background: 'none', border: 'none', color: 'var(--color-primary)', textDecoration: 'underline', cursor: 'pointer', padding: 0, marginLeft: '5px' }}
+                >
+                  Click here to view upload license copy
+                </button>
+              </p>
+            )}
           </div>
           <div className={`badge ${projectState.documentType === 'BINDING_QUOTE' ? 'badge-success' : 'badge-warning'}`}>
             {projectState.documentType === 'BINDING_QUOTE' ? 'Fixed Quote (CRA 2015 Compliant)' : 'Non-binding Estimate (± 20%)'}
