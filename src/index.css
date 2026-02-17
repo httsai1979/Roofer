@@ -1,0 +1,113 @@
+:root {
+  --color-primary: #1b3022;
+  /* Deep Forest Green */
+  --color-secondary: #4a5d4e;
+  /* Sage Accent */
+  --color-accent: #c5a35d;
+  /* Gold/Brass Detail */
+  --color-background: #fdfaf5;
+  /* Cream White */
+  --color-text: #2d3436;
+  /* Slate Dark */
+  --color-muted: #636e72;
+  --color-border: #dfe6e9;
+  --color-warning: #d63031;
+
+  --shadow-premium: 0 10px 30px rgba(0, 0, 0, 0.05);
+  --border-radius: 12px;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.roof-trust-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.card {
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-premium);
+  border: 1px solid var(--color-border);
+  margin-bottom: 1.5rem;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(27, 48, 34, 0.1);
+}
+
+.button-primary {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.button-primary:hover {
+  background-color: var(--color-secondary);
+  transform: translateY(-2px);
+}
+
+.badge {
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-warning {
+  background-color: #fff3f3;
+  color: var(--color-warning);
+  border: 1px solid #ffebeb;
+}
+
+.badge-success {
+  background-color: #f0fff4;
+  color: #27ae60;
+  border: 1px solid #dcfce7;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--color-primary);
+  font-weight: 800;
+}
+
+.term-tooltip {
+  cursor: help;
+  border-bottom: 1px dashed var(--color-accent);
+  position: relative;
+}
+
+.term-tooltip:hover::after {
+  content: attr(data-layman);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-primary);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 6px;
+  width: 200px;
+  font-size: 0.8rem;
+  z-index: 10;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}

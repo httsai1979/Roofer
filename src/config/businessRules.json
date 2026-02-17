@@ -1,0 +1,109 @@
+{
+  "module": "Roofing_Project_Lifecycle_Manager_UK",
+  "version": "2026.1",
+  "compliance_standards": [
+    "BSA_2022",
+    "Part_L_2025",
+    "BS_5534",
+    "CRA_2015",
+    "CPS_SCHEME"
+  ],
+  "onboarding": {
+    "verification_sources": [
+      "NFRC",
+      "CompetentRoofer"
+    ],
+    "unverified_warning": "This contractor is not currently part of a Competent Person Scheme; independent building control inspection may be required."
+  },
+  "workflows": {
+    "phase_1_digital_survey": {
+      "inputs": {
+        "postcode": "string",
+        "building_height_meters": "float",
+        "roof_pitch_degrees": "integer",
+        "loft_inspection_accessible": "boolean"
+      },
+      "logic_gates": [
+        {
+          "rule_id": "QUOTE_VS_ESTIMATE",
+          "condition": "if (loft_inspection_accessible == true AND site_photos_count >= 5)",
+          "true_action": "set_document_type('BINDING_QUOTE')",
+          "false_action": "set_document_type('NON_BINDING_ESTIMATE')",
+          "regulatory_ref": "Consumer Rights Act 2015"
+        },
+        {
+          "rule_id": "WIND_UPLIFT_CALC",
+          "condition": "always_run",
+          "action": "query_bs5534_zone(postcode, building_height_meters)",
+          "output": "fixing_specification_object"
+        }
+      ]
+    },
+    "phase_2_verification_module": {
+      "milestones": [
+        {
+          "id": "MS_01_STRIP",
+          "name": "Strip and Inspect",
+          "required_evidence": [
+            "photo_rafters_exposed",
+            "photo_deck_condition"
+          ],
+          "variation_trigger": "if (rot_detected == true) initiate_variation_order()"
+        },
+        {
+          "id": "MS_02_INSULATION",
+          "name": "Thermal Upgrade (Part L)",
+          "required_evidence": [
+            "photo_insulation_depth",
+            "photo_no_gaps",
+            "photo_vcl_integrity"
+          ],
+          "validation": "verify_geotag_and_timestamp()",
+          "regulatory_ref": "Building Regulations Part L"
+        },
+        {
+          "id": "MS_03_WEATHERING",
+          "name": "Secondary Defence",
+          "required_evidence": [
+            "photo_membrane_drape",
+            "photo_batten_spacing",
+            "photo_eaves_tray"
+          ],
+          "weather_check": "if (current_rain > 0) block_signoff('Cannot lay membrane in wet')"
+        },
+        {
+          "id": "MS_04_FIXING",
+          "name": "Primary Covering",
+          "required_evidence": [
+            "photo_mechanical_fixings",
+            "photo_perimeter_clips"
+          ],
+          "validation": "compare_against_spec(fixing_specification_object)",
+          "regulatory_ref": "BS 5534"
+        }
+      ]
+    },
+    "phase_3_handover": {
+      "triggers": {
+        "on_completion": [
+          "generate_golden_thread_pack()",
+          "issue_building_regs_certificate_request()",
+          "trigger_final_invoice()"
+        ]
+      },
+      "data_retention_policy": {
+        "rule": "Keep structural records for 15 years",
+        "regulatory_ref": "Building Safety Act 2022 (Defective Premises Act amendment)"
+      }
+    }
+  },
+  "weather_monitor_agent": {
+    "api_check_frequency": "60_minutes",
+    "safety_thresholds": {
+      "wind_gust_mph": 45,
+      "precip_mm_hr": 2.0,
+      "temp_celsius_min": 2
+    },
+    "action_on_breach": "send_notification(client_id, 'Work Suspended: Health & Safety Protocol')"
+  }
+}
