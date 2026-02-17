@@ -121,7 +121,11 @@ function App() {
             <section className="card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h2 style={{ margin: 0 }}><CreditCard /> Payment & Escrow Status</h2>
-                <div style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>Secured via Protected Funds</div>
+                <div style={{ fontSize: '0.9rem', color: 'var(--color-muted)', textAlign: 'right' }}>
+                  Original (£{quoteData.baseCost.toLocaleString()})
+                  {quoteData.approvedVariationCost > 0 && ` + Approved VO (£${quoteData.approvedVariationCost.toLocaleString()})`} =
+                  <strong> £{quoteData.totalCost.toLocaleString()}</strong>
+                </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -129,7 +133,7 @@ function App() {
                   <div key={stage.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.2rem', background: stage.status === 'released' ? '#f0fff4' : '#f8fafc', borderRadius: '12px', border: '1px solid #edf2f7' }}>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{stage.label}</div>
-                      <div style={{ color: 'var(--color-primary)', fontWeight: 600 }}>£{(quoteData.totalCost * (stage.percent / 100)).toLocaleString()}</div>
+                      <div style={{ color: 'var(--color-primary)', fontWeight: 600 }}>£{(quoteData.totalCost * (stage.percent / 100)).toFixed(2).toLocaleString()}</div>
                     </div>
                     {stage.status === 'released' ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--color-success)', fontWeight: 700 }}>
@@ -430,7 +434,11 @@ function App() {
               <div>
                 <div style={{ fontSize: '1rem', color: 'var(--color-muted)', marginBottom: '0.5rem' }}>Full Project Cost (Incl. Labour)</div>
                 <div style={{ fontSize: '2.5rem', fontWeight: 800 }}>£{quoteData.totalCost.toLocaleString()}</div>
-                <p style={{ margin: 0, fontSize: '0.85rem', color: projectState.documentType === 'BINDING_QUOTE' ? 'var(--color-success)' : 'var(--color-warning)', fontWeight: 600 }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
+                  Original: £{quoteData.baseCost.toLocaleString()}
+                  {quoteData.approvedVariationCost > 0 && ` + Variations: £${quoteData.approvedVariationCost.toLocaleString()}`}
+                </div>
+                <p style={{ margin: '0.4rem 0 0', fontSize: '0.85rem', color: projectState.documentType === 'BINDING_QUOTE' ? 'var(--color-success)' : 'var(--color-warning)', fontWeight: 600 }}>
                   {projectState.documentType === 'BINDING_QUOTE' ? '✓ Price Locked' : '⚠ Subject to Survey Variance (±20%)'}
                 </p>
               </div>

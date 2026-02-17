@@ -117,6 +117,8 @@ export const useWorkflow = () => {
         const durationDays = Math.ceil(5 * complexityFactor);
 
         return {
+            baseCost,
+            approvedVariationCost,
             totalCost,
             durationDays,
             weatherContingencyDays: Math.ceil(durationDays * 0.25)
