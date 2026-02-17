@@ -36,6 +36,7 @@ const INITIAL_STATE = {
             { id: 'c3', label: 'All tiles properly fixed (BS 5534)', checked: false },
             { id: 'c4', label: 'Photographic evidence verified', checked: false },
         ],
+        variations: [], // { id, reason, extraCost, status: 'pending_approval' | 'approved' | 'rejected' }
         handoverPackGenerated: false,
         handoverPackSent: false,
     },
@@ -56,7 +57,6 @@ export const useWorkflow = () => {
         return saved ? JSON.parse(saved) : INITIAL_STATE;
     });
 
-    // Sync to LocalStorage
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(projectState));
     }, [projectState]);
@@ -70,41 +70,31 @@ export const useWorkflow = () => {
         setProjectState(prev => {
             const newInputs = { ...prev.inputs, [key]: value };
             let newDocType = prev.documentType;
-
             if (newInputs.loft_inspection_accessible && newInputs.site_photos_count >= 5) {
                 newDocType = 'BINDING_QUOTE';
             } else {
                 newDocType = 'NON_BINDING_ESTIMATE';
             }
-
-            return {
-                ...prev,
-                inputs: newInputs,
-                documentType: newDocType,
-            };
+            return { ...prev, inputs: newInputs, documentType: newDocType };
         });
     }, []);
 
     const calculateWindUplift = useCallback((postcode) => {
         const zones = ['Zone 1', 'Zone 2', 'Zone 3', 'Zone 4', 'Zone 5'];
         const randomZone = zones[Math.floor(Math.random() * zones.length)];
-
         const spec = {
             zone: randomZone,
             schedule: "All perimeter tiles twice-fixed; clips required for zones A & B",
             ref: "BS 5534:2014+A2:2018"
         };
-
-        setProjectState(prev => ({
-            ...prev,
-            fixingSpec: spec
-        }));
+        setProjectState(prev => ({ ...prev, fixingSpec: spec }));
         return spec;
     }, []);
 
     const calculateEstimate = useCallback(() => {
         const { building_height_meters, roof_pitch_degrees, roof_area_sqm } = projectState.inputs;
         const fixingSpec = projectState.fixingSpec;
+        const variations = projectState.project.variations || [];
 
         const baseRate = 120;
         const area = roof_area_sqm || 0;
@@ -115,7 +105,14 @@ export const useWorkflow = () => {
             windZoneFactor = 1.15;
         }
 
-        const totalCost = baseRate * area * complexityFactor * windZoneFactor;
+        const baseCost = baseRate * area * complexityFactor * windZoneFactor;
+
+        // Add approved variation costs
+        const approvedVariationCost = variations
+            .filter(v => v.status === 'approved')
+            .reduce((sum, v) => sum + v.extraCost, 0);
+
+        const totalCost = baseCost + approvedVariationCost;
         const durationDays = Math.ceil(5 * complexityFactor);
 
         return {
@@ -123,12 +120,36 @@ export const useWorkflow = () => {
             durationDays,
             weatherContingencyDays: Math.ceil(durationDays * 0.25)
         };
-    }, [projectState.inputs, projectState.fixingSpec]);
+    }, [projectState.inputs, projectState.fixingSpec, projectState.project.variations]);
+
+    const applyVariation = useCallback((reason, extraCost) => {
+        setProjectState(prev => ({
+            ...prev,
+            project: {
+                ...prev.project,
+                variations: [
+                    ...(prev.project.variations || []),
+                    { id: Date.now(), reason, extraCost, status: 'pending_approval' }
+                ]
+            }
+        }));
+    }, []);
+
+    const updateVariationStatus = useCallback((id, status) => {
+        setProjectState(prev => ({
+            ...prev,
+            project: {
+                ...prev.project,
+                variations: prev.project.variations.map(v =>
+                    v.id === id ? { ...v, status } : v
+                )
+            }
+        }));
+    }, []);
 
     const checkWeatherSafety = useCallback(() => {
         const { rain_mm, wind_mph, temp_c } = projectState.weather;
         const { safety_thresholds } = rules.weather_monitor_agent;
-
         if (wind_mph > safety_thresholds.wind_gust_mph ||
             rain_mm > safety_thresholds.precip_mm_hr ||
             temp_c < safety_thresholds.temp_celsius_min) {
@@ -242,6 +263,8 @@ export const useWorkflow = () => {
         sendHandoverEmail,
         uploadCredential,
         resetProject,
+        applyVariation,
+        updateVariationStatus,
         config: currentPhaseConfig,
     };
 };

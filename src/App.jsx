@@ -17,10 +17,13 @@ function App() {
     updateChecklist,
     generateHandoverPack,
     sendHandoverEmail,
-    resetProject
+    resetProject,
+    applyVariation,
+    updateVariationStatus
   } = useWorkflow();
 
   const [onboardingForm, setOnboardingForm] = useState({ name: '', registration_number: '' });
+  const [variationForm, setVariationForm] = useState({ reason: '', cost: '' });
 
   const handlePostcodeSearch = () => {
     if (projectState.inputs.postcode) {
@@ -240,6 +243,72 @@ function App() {
                 <p style={{ fontSize: '0.9rem' }}>All payments settled and compliance records delivered. The "Golden Thread" has been secured for 15 years.</p>
               </div>
             )}
+
+            <div className="card" style={{ background: '#fff' }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><AlertTriangle size={20} /> Variation Orders (Changes to Quote)</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>Under CRA 2015, any price increase must be clearly justified and agreed upon.</p>
+
+              {/* Variation Request Form (Contractor View) */}
+              <div style={{ marginTop: '1.5rem', padding: '1rem', border: '1px solid #eee', borderRadius: '8px' }}>
+                <h4 style={{ marginTop: 0 }}>Request New Variation</h4>
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                  <input
+                    type="text"
+                    placeholder="Reason (e.g. Rotten timber found)"
+                    className="input-field"
+                    style={{ flex: 2, padding: '0.5rem' }}
+                    value={variationForm.reason}
+                    onChange={(e) => setVariationForm({ ...variationForm, reason: e.target.value })}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Extra Cost (£)"
+                    className="input-field"
+                    style={{ flex: 1, padding: '0.5rem' }}
+                    value={variationForm.cost}
+                    onChange={(e) => setVariationForm({ ...variationForm, cost: e.target.value })}
+                  />
+                </div>
+                <button
+                  className="button-primary"
+                  style={{ width: '100%', padding: '0.6rem' }}
+                  onClick={() => {
+                    applyVariation(variationForm.reason, parseFloat(variationForm.cost));
+                    setVariationForm({ reason: '', cost: '' });
+                  }}
+                >
+                  Submit Variation for Homeowner Approval
+                </button>
+              </div>
+
+              {/* Variation List (Homeowner/Bilateral View) */}
+              <div style={{ marginTop: '1.5rem' }}>
+                {(projectState.project.variations || []).map(v => (
+                  <div key={v.id} style={{ padding: '1rem', border: '1px solid #eee', marginBottom: '0.5rem', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: v.status === 'approved' ? '#f0fff4' : v.status === 'rejected' ? '#fff5f5' : '#f8fafc' }}>
+                    <div>
+                      <span style={{ fontWeight: 700 }}>£{v.extraCost.toLocaleString()}</span> - {v.reason}
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-muted)' }}>Status: {v.status.toUpperCase()}</p>
+                    </div>
+                    {v.status === 'pending_approval' && (
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          onClick={() => updateVariationStatus(v.id, 'approved')}
+                          style={{ background: '#27ae60', color: 'white', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => updateVariationStatus(v.id, 'rejected')}
+                          style={{ background: '#e74c3c', color: 'white', border: 'none', padding: '4px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </section>
 
           <aside>
