@@ -16,6 +16,7 @@ export const useWorkflow = () => {
             roof_pitch_degrees: 0,
             loft_inspection_accessible: false,
             site_photos_count: 0,
+            roof_area_sqm: 0,
         },
         project: {
             startDate: null,
@@ -90,14 +91,23 @@ export const useWorkflow = () => {
     }, []);
 
     const calculateEstimate = useCallback(() => {
-        const { building_height_meters, roof_pitch_degrees } = projectState.inputs;
+        const { building_height_meters, roof_pitch_degrees, roof_area_sqm } = projectState.inputs;
+        const fixingSpec = projectState.fixingSpec;
 
         // Simplified calculation logic
         const baseRate = 120; // £ per sqm
-        const area = 80; // Mock area
+        const area = roof_area_sqm || 0;
+
+        // Complexity Factors
         const complexityFactor = (building_height_meters > 5 ? 1.2 : 1) * (roof_pitch_degrees > 35 ? 1.15 : 1);
 
-        const totalCost = baseRate * area * complexityFactor;
+        // BS 5534 Wind Zone Factor: +15% for Zone 3, 4, or 5
+        let windZoneFactor = 1;
+        if (fixingSpec && (fixingSpec.zone === 'Zone 3' || fixingSpec.zone === 'Zone 4' || fixingSpec.zone === 'Zone 5')) {
+            windZoneFactor = 1.15;
+        }
+
+        const totalCost = baseRate * area * complexityFactor * windZoneFactor;
         const durationDays = Math.ceil(5 * complexityFactor);
 
         return {
@@ -105,7 +115,7 @@ export const useWorkflow = () => {
             durationDays,
             weatherContingencyDays: Math.ceil(durationDays * 0.25) // 25% for UK weather
         };
-    }, [projectState.inputs]);
+    }, [projectState.inputs, projectState.fixingSpec]);
 
     const checkWeatherSafety = useCallback(() => {
         const { rain_mm, wind_mph, temp_c } = projectState.weather;

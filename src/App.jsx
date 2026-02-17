@@ -288,7 +288,7 @@ function App() {
               <ShieldCheck size={24} /> Phase 1: Digital Survey & Quoting
             </h2>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1.5rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Building Height (m)</label>
                 <input
@@ -307,6 +307,16 @@ function App() {
                   style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--color-border)', boxSizing: 'border-box' }}
                   value={projectState.inputs.roof_pitch_degrees}
                   onChange={(e) => updateInput('roof_pitch_degrees', parseFloat(e.target.value))}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Roof Area (sqm)</label>
+                <input
+                  type="number"
+                  className="input-field"
+                  style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--color-border)', boxSizing: 'border-box' }}
+                  value={projectState.inputs.roof_area_sqm}
+                  onChange={(e) => updateInput('roof_area_sqm', parseFloat(e.target.value))}
                 />
               </div>
             </div>
