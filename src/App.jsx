@@ -256,15 +256,34 @@ function App() {
           <aside>
             <div className="card" style={{ background: 'var(--color-primary)', color: 'white' }}>
               <h3 style={{ color: 'white' }}><HardHat /> Workday Log</h3>
-              <p style={{ opacity: 0.8, fontSize: '0.9rem' }}>Contractors must upload end-of-day photos to maintain the project audit trail.</p>
+              <p style={{ opacity: 0.8, fontSize: '0.9rem' }}>Select category and upload photo for the 'Golden Thread' audit.</p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '1rem' }}>
+                <button
+                  className="button-primary"
+                  style={{ background: 'white', color: 'var(--color-primary)', fontSize: '0.75rem', padding: '0.5rem' }}
+                  onClick={() => uploadDailyPhoto('Insulation_Check')}
+                >
+                  + Insulation
+                </button>
+                <button
+                  className="button-primary"
+                  style={{ background: 'white', color: 'var(--color-primary)', fontSize: '0.75rem', padding: '0.5rem' }}
+                  onClick={() => uploadDailyPhoto('Structural_Fixing')}
+                >
+                  + Structural
+                </button>
+              </div>
+
               <button
                 className="button-primary"
-                style={{ width: '100%', background: 'white', color: 'var(--color-primary)', marginTop: '1rem' }}
+                style={{ width: '100%', background: 'white', color: 'var(--color-primary)', marginTop: '0.8rem' }}
                 disabled={hasTodayLog}
-                onClick={uploadDailyPhoto}
+                onClick={() => uploadDailyPhoto('General')}
               >
-                <Camera size={18} /> {hasTodayLog ? 'Daily Log Verified ✓' : 'Upload Today\'s Log'}
+                <Camera size={18} /> {hasTodayLog ? 'Daily Log Verified ✓' : 'Upload General Photo'}
               </button>
+
               {hasTodayLog && (
                 <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '0.85rem' }}>
                   ✓ Progress data successfully synced for {new Date().toLocaleDateString()}.
@@ -287,7 +306,7 @@ function App() {
                       </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{log.date}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--color-success)' }}>{log.status}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--color-success)' }}>{log.tag}: {log.status}</div>
                       </div>
                     </div>
                   ))
@@ -300,7 +319,12 @@ function App() {
                 <h3>Final Documentation</h3>
                 <p style={{ fontSize: '0.9rem' }}>Handover pack is ready. Once sent by contractor, final payment can be released.</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1rem' }}>
-                  <button className="button-primary" onClick={generateHandoverPack}><Download size={18} /> Generate Warranty Pack</button>
+                  <button className="button-primary" onClick={() => {
+                    const result = generateHandoverPack();
+                    if (!result.success) {
+                      alert(`Missing Statutory Evidence: Please upload photos for ${result.missing.join(', ')} before generating the pack.`);
+                    }
+                  }}><Download size={18} /> Generate Warranty Pack</button>
                   <button
                     className="button-primary"
                     disabled={!projectState.project.handoverPackGenerated}

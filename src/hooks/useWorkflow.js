@@ -199,14 +199,21 @@ export const useWorkflow = () => {
         }));
     }, []);
 
-    const uploadDailyPhoto = useCallback(() => {
+    const MANDATORY_PHOTO_CATEGORIES = ['Insulation_Check', 'Structural_Fixing'];
+
+    const uploadDailyPhoto = useCallback((tag = 'General') => {
         setProjectState(prev => ({
             ...prev,
             project: {
                 ...prev.project,
                 dailyLogs: [
                     ...prev.project.dailyLogs,
-                    { date: new Date().toLocaleDateString(), photoUploaded: true, status: 'Completed' }
+                    {
+                        date: new Date().toLocaleDateString(),
+                        photoUploaded: true,
+                        status: 'Completed',
+                        tag
+                    }
                 ],
                 lastUpdateTimestamp: Date.now()
             }
@@ -238,11 +245,19 @@ export const useWorkflow = () => {
     }, []);
 
     const generateHandoverPack = useCallback(() => {
+        const uploadedTags = projectState.project.dailyLogs.map(log => log.tag);
+        const missing = MANDATORY_PHOTO_CATEGORIES.filter(cat => !uploadedTags.includes(cat));
+
+        if (missing.length > 0) {
+            return { success: false, missing };
+        }
+
         setProjectState(prev => ({
             ...prev,
             project: { ...prev.project, handoverPackGenerated: true }
         }));
-    }, []);
+        return { success: true };
+    }, [projectState.project.dailyLogs]);
 
     const sendHandoverEmail = useCallback(() => {
         setProjectState(prev => ({
