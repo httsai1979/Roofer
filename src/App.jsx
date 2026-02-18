@@ -345,7 +345,18 @@ function App() {
               <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)' }}>Digital 'Golden Thread' record (BSA 2022)</p>
 
               <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {projectState.project.dailyLogs.length === 0 ? (
+                {!weatherSafety.safe && (
+                  <div className="timeline-item" style={{ padding: '1rem', gap: '0.8rem', background: '#fff5f5', border: '1px solid #feb2b2' }}>
+                    <div style={{ width: '40px', height: '40px', background: '#fff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #feb2b2' }}>
+                      <AlertTriangle size={20} color="#e53e3e" />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#c53030' }}>Weather Stoppage Active</div>
+                      <div style={{ fontSize: '0.75rem', color: '#9b2c2c' }}>{weatherSafety.reason} (Work Suspended)</div>
+                    </div>
+                  </div>
+                )}
+                {projectState.project.dailyLogs.length === 0 && weatherSafety.safe ? (
                   <p style={{ fontStyle: 'italic', fontSize: '0.85rem' }}>Awaiting first upload...</p>
                 ) : (
                   projectState.project.dailyLogs.map((log, i) => (
