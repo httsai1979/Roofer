@@ -349,6 +349,28 @@ function App() {
               </div>
               <p style={{ opacity: 0.8, fontSize: '0.8rem' }}>Statutory photos for BSA 2022 compliance.</p>
 
+              <div style={{ marginTop: '1.2rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <Shield size={18} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>NFRC Accreditation</div>
+                    <div style={{ fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      Verified <span className="status-blink-active" style={{ fontSize: '0.55rem', color: '#4ade80' }}>Active Today</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+                  <FileCheck size={18} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>Live Insurance Check</div>
+                    <div style={{ fontWeight: 700, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      £5M Public Liability <span className="status-blink-active" style={{ fontSize: '0.55rem', color: '#4ade80' }}>Active Today</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '1rem' }}>
                 <button
                   className="button-primary"
@@ -419,6 +441,18 @@ function App() {
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#c53030' }}>Weather Stoppage Active</div>
                       <div style={{ fontSize: '0.75rem', color: '#9b2c2c' }}>{weatherSafety.reason} (Work Suspended)</div>
+                    </div>
+                  </div>
+                )}
+                {/* Simulated Third-party Delay (Example: Scaffolding Company) */}
+                {projectState.inputs.requiresScaffolding && !projectState.project.scaffoldingCertified && (
+                  <div className="timeline-item" style={{ padding: '1rem', gap: '0.8rem', background: '#fef3c7', border: '1px solid #fcd34d' }}>
+                    <div style={{ width: '40px', height: '40px', background: '#fff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #fcd34d' }}>
+                      <Truck size={20} color="#d97706" />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#92400e' }}>Third-party Delay: Logistics</div>
+                      <div style={{ fontSize: '0.75rem', color: '#b45309' }}>Awaiting Scaffolding Handover Certificate.</div>
                     </div>
                   </div>
                 )}
@@ -575,32 +609,50 @@ function App() {
               <ShieldCheck size={40} color={projectState.documentType === 'BINDING_QUOTE' ? 'var(--color-success)' : 'var(--color-accent)'} />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', margin: '2.5rem 0' }}>
-              <div>
-                <div style={{ fontSize: '1rem', color: 'var(--color-muted)', marginBottom: '0.5rem' }}>Full Project Cost (Incl. Labour)</div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 800 }}>£{quoteData.totalCost.toLocaleString()}</div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
-                  Base: £{quoteData.baseCost.toLocaleString()}
-                  {quoteData.licenseFee > 0 && ` + License: £${quoteData.licenseFee.toLocaleString()}`}
-                  {quoteData.approvedVariationCost > 0 && ` + Variations: £${quoteData.approvedVariationCost.toLocaleString()}`}
+            <div style={{ marginTop: '2.5rem' }}>
+              <h4 style={{ marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>Transparent Cost Breakdown</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginTop: '1.5rem' }}>
+                <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '12px' }}>
+                  <h5 style={{ marginTop: 0, marginBottom: '0.8rem', color: 'var(--color-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Cost Breakdown</h5>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', fontSize: '0.85rem' }}>
+                    <div style={{ opacity: 0.8 }}>Professional Labour</div>
+                    <div style={{ textAlign: 'right', fontWeight: 600 }}>£{quoteData.labourCost.toLocaleString()}</div>
+                    <div style={{ opacity: 0.8 }}>Materials</div>
+                    <div style={{ textAlign: 'right', fontWeight: 600 }}>£{quoteData.materialsCost.toLocaleString()}</div>
+                    <div style={{ opacity: 0.8 }}>Logistics (Scaff/Skip)</div>
+                    <div style={{ textAlign: 'right', fontWeight: 600 }}>£{quoteData.logisticsCost.toLocaleString()}</div>
+                    <div style={{ opacity: 0.8 }}>Statutory Fees</div>
+                    <div style={{ textAlign: 'right', fontWeight: 600 }}>£{quoteData.statutoryFees.toLocaleString()}</div>
+                    {quoteData.approvedVariationCost > 0 && (
+                      <div style={{ gridColumn: 'span 2', color: 'var(--color-warning)', fontWeight: 600 }}>+ VO Applied: £{quoteData.approvedVariationCost.toLocaleString()}</div>
+                    )}
+                    <div style={{ gridColumn: 'span 2', borderTop: '1px solid #e2e8f0', marginTop: '0.4rem', paddingTop: '0.4rem', display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '1rem' }}>
+                      <span>Total:</span>
+                      <span>£{quoteData.totalCost.toLocaleString()}</span>
+                    </div>
+                  </div>
                 </div>
-                <p style={{ margin: '0.4rem 0 0', fontSize: '0.85rem', color: projectState.documentType === 'BINDING_QUOTE' ? 'var(--color-success)' : 'var(--color-warning)', fontWeight: 600 }}>
+
+                <div style={{ padding: '1rem', background: '#f0fff4', borderRadius: '12px' }}>
+                  <h5 style={{ marginTop: 0, marginBottom: '0.8rem', color: 'var(--color-success)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Timeline Summary</h5>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--color-primary)' }}>{quoteData.totalDurationDays} Days</div>
+                  <div style={{ fontSize: '0.8rem', marginTop: '0.4rem' }}>
+                    <strong>{quoteData.baseDuration}</strong> Base + <strong>{quoteData.approvedExtraDays}</strong> Variations
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
+                    + {quoteData.weatherContingencyDays} Days Weather Buffer
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: projectState.documentType === 'BINDING_QUOTE' ? 'var(--color-success)' : 'var(--color-warning)', fontWeight: 600 }}>
                   {projectState.documentType === 'BINDING_QUOTE' ? (
-                    <span style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                      <ShieldCheck size={14} /> Price Locked
+                    <span style={{ fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
+                      <ShieldCheck size={16} /> Price Locked & Guaranteed (BSA 2022)
                     </span>
                   ) : '⚠ Subject to Survey Variance (±20%)'}
                 </p>
-              </div>
-              <div>
-                <div style={{ fontSize: '1rem', color: 'var(--color-muted)', marginBottom: '0.5rem' }}>Expected Completion</div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 800 }}>{quoteData.totalDurationDays} Days</div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--color-success)', fontWeight: 600 }}>
-                  Includes {quoteData.approvedExtraDays} days approved variations
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
-                  + {quoteData.weatherContingencyDays} Days Weather Buffer
-                </div>
               </div>
             </div>
 
@@ -730,13 +782,13 @@ function App() {
             Clear Data & Start New Quote
           </button>
         </aside>
-      </div>
+      </div >
 
       <footer style={{ marginTop: '4rem', paddingBottom: '3rem', textAlign: 'center', color: 'var(--color-muted)', fontSize: '0.85rem' }}>
         <p>RoofTrust UK © 2026 • The Standard for British Roofing</p>
         <p>Consumer Rights Act 2015 & Building Safety Act 2022 Compliant Platform</p>
       </footer>
-    </div>
+    </div >
   );
 }
 

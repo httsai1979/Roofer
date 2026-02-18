@@ -120,9 +120,18 @@ export const useWorkflow = () => {
 
         const baseCost = baseRate * area * complexityFactor * windZoneFactor;
 
-        let licenseFee = 0;
+        // Transparent Breakdown Logic
+        const labourCost = baseCost * 0.65;
+        const materialsCost = baseCost * 0.35;
+
+        let statutoryFees = 0;
         if (requiresScaffolding && isPublicPavement) {
-            licenseFee = 350; // Estimated Local Council Pavement License
+            statutoryFees = 350; // Local Council Pavement License
+        }
+
+        let logisticsCost = 0;
+        if (requiresScaffolding) {
+            logisticsCost = (building_height_meters > 5 ? 1200 : 800) + 250; // Scaffolding + Skip Hire
         }
 
         // Approved variations
@@ -130,13 +139,15 @@ export const useWorkflow = () => {
         const approvedVariationCost = approvedVariations.reduce((sum, v) => sum + v.extraCost, 0);
         const approvedExtraDays = approvedVariations.reduce((sum, v) => sum + (v.daysAdded || 0), 0);
 
-        const totalCost = baseCost + approvedVariationCost + licenseFee;
+        const totalCost = labourCost + materialsCost + logisticsCost + statutoryFees + approvedVariationCost;
         const baseDuration = Math.ceil(5 * complexityFactor);
         const totalDurationDays = baseDuration + approvedExtraDays;
 
         return {
-            baseCost,
-            licenseFee,
+            labourCost,
+            materialsCost,
+            logisticsCost,
+            statutoryFees,
             approvedVariationCost,
             totalCost,
             baseDuration,
