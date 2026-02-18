@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useWorkflow } from './hooks/useWorkflow';
 import { TERMINOLOGY } from './constants/terminology';
-import { FileText, ShieldCheck, CloudRain, Info, Search, UserPlus, CheckCircle, AlertTriangle, CreditCard, Download, Mail, ChevronRight, HardHat, Camera, Hammer } from 'lucide-react';
+import { FileText, ShieldCheck, CloudRain, Info, Search, UserPlus, CheckCircle, AlertTriangle, CreditCard, Download, Mail, ChevronRight, HardHat, Camera, Hammer, Home, Box, Image, Truck, Shield } from 'lucide-react';
 
 function App() {
   const {
@@ -25,6 +25,7 @@ function App() {
     updateVariationStatus,
     uploadCredential,
     auditProgress,
+    isInsuranceValid,
   } = useWorkflow();
 
   const [onboardingForm, setOnboardingForm] = useState({ name: '', registration_number: '', insuranceExpiry: '', gdprAgreed: false });
@@ -32,7 +33,6 @@ function App() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [agreedToGDPR, setAgreedToGDPR] = useState(false);
-  const { isInsuranceValid } = useWorkflow();
 
   const handlePostcodeSearch = () => {
     if (projectState.inputs.postcode) {
@@ -518,6 +518,33 @@ function App() {
   // Phase 1: Survey & Quoting
   return (
     <div className="roof-trust-container">
+      <div style={{
+        background: (isInsuranceValid && (!projectState.inputs.requiresScaffolding || projectState.project.scaffoldingCertified)) ? 'var(--color-success)' : '#718096',
+        color: 'white',
+        padding: '0.8rem 2rem',
+        fontSize: '0.9rem',
+        fontWeight: 700,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        borderRadius: '0 0 16px 16px',
+        marginBottom: '2rem',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+      }}>
+        <HardHat size={20} />
+        <span>HSE & Compliance Status: {(isInsuranceValid && (!projectState.inputs.requiresScaffolding || projectState.project.scaffoldingCertified)) ? 'Logistics Valid (Insurance Active & Site Safe)' : 'Pending Logistics Verification'}</span>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '1.5rem', opacity: 0.9, fontSize: '0.8rem' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Shield size={14} /> Insurance: {isInsuranceValid ? '✓' : '⚠'}
+          </span>
+          {projectState.inputs.requiresScaffolding && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <Truck size={14} /> Scaffold: {projectState.project.scaffoldingCertified ? '✓' : '⚠'}
+            </span>
+          )}
+        </div>
+      </div>
+
       {!projectState.contractor.isVerified && (
         <div style={{ background: '#fff5f5', padding: '1.2rem', borderRadius: '12px', border: '1px solid #feb2b2', display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '2.5rem' }}>
           <AlertTriangle color="#c53030" size={24} />
@@ -549,48 +576,66 @@ function App() {
               幫助師傅在抵達前進行「遠端診斷」，這能大幅減少現場檢查時間，並讓報價更精準。
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-              {[
-                { id: 'internal_leak', label: '1. 室內/天花板', detail: '漏水潮濕點', icon: <Home size={20} /> },
-                { id: 'loft_source', label: '2. 閣樓內部', detail: '對應漏水位置', icon: <Box size={20} /> },
-                { id: 'exterior_panorama', label: '3. 房屋外觀', detail: '用於估算鷹架', icon: <Image size={20} /> }
-              ].map(item => (
-                <div key={item.id} style={{
-                  padding: '1rem',
-                  background: projectState.inputs.problemSnapshots?.[item.id] ? '#f0fff4' : '#f8fafc',
-                  borderRadius: '12px',
-                  border: projectState.inputs.problemSnapshots?.[item.id] ? '1px solid var(--color-success)' : '1px dashed #cbd5e0',
-                  textAlign: 'center',
-                  transition: 'all 0.3s ease'
-                }}>
-                  <div style={{ color: projectState.inputs.problemSnapshots?.[item.id] ? 'var(--color-success)' : 'var(--color-muted)', marginBottom: '0.5rem' }}>
-                    {item.icon}
+            <div style={{ marginTop: '2rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '1.5rem' }}>
+                {[
+                  { id: 'internal_leak', label: '1. 內部', icon: <Home size={28} />, detail: '天花板水印' },
+                  { id: 'loft_source', label: '2. 閣樓', icon: <Box size={28} />, detail: '對應位置' },
+                  { id: 'exterior_panorama', label: '3. 外觀', icon: <Image size={28} />, detail: '全景/鷹架' }
+                ].map(item => (
+                  <div key={item.id} style={{ textAlign: 'center', opacity: projectState.inputs.problemSnapshots?.[item.id] ? 1 : 0.4 }}>
+                    <div style={{
+                      width: '60px', height: '60px',
+                      background: projectState.inputs.problemSnapshots?.[item.id] ? 'var(--color-success)' : '#f1f5f9',
+                      color: projectState.inputs.problemSnapshots?.[item.id] ? 'white' : 'var(--color-muted)',
+                      borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.5rem',
+                      border: '2px solid' + (projectState.inputs.problemSnapshots?.[item.id] ? 'var(--color-success)' : '#e2e8f0')
+                    }}>
+                      {item.icon}
+                    </div>
+                    <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{item.label}</div>
                   </div>
-                  <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{item.label}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', margin: '0.3rem 0 0.8rem' }}>{item.detail}</div>
-
-                  <button
-                    className="button-primary"
-                    style={{
-                      padding: '0.4rem 0.8rem',
-                      fontSize: '0.75rem',
-                      background: projectState.inputs.problemSnapshots?.[item.id] ? 'var(--color-success)' : 'white',
-                      color: projectState.inputs.problemSnapshots?.[item.id] ? 'white' : 'var(--color-primary)',
-                      border: projectState.inputs.problemSnapshots?.[item.id] ? 'none' : '1px solid #cbd5e0',
-                      width: '100%'
-                    }}
-                    onClick={() => updateSnapshot(item.id, 'https://images.unsplash.com/photo-1513161455079-7dc1de15ef3e?auto=format&fit=crop&q=80&w=200')}
-                  >
-                    {projectState.inputs.problemSnapshots?.[item.id] ? '已上傳 ✓' : '上傳照片'}
-                  </button>
-                </div>
-              ))}
-            </div>
-            {Object.values(projectState.inputs.problemSnapshots || {}).every(v => v !== null) && (
-              <div style={{ marginTop: '1.2rem', padding: '0.8rem', background: '#f0fff4', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <CheckCircle size={16} /> 師傅預判資料已齊備，將優先處理。
+                ))}
               </div>
-            )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                {[
+                  { id: 'internal_leak', label: '室內/天花板', detail: '漏水潮濕點' },
+                  { id: 'loft_source', label: '閣樓內部', detail: '對應漏水位置' },
+                  { id: 'exterior_panorama', label: '房屋外觀', detail: '用於估算鷹架' }
+                ].map(item => (
+                  <div key={item.id} style={{
+                    padding: '1rem',
+                    background: projectState.inputs.problemSnapshots?.[item.id] ? '#f0fff4' : '#f8fafc',
+                    borderRadius: '12px',
+                    border: projectState.inputs.problemSnapshots?.[item.id] ? '1px solid var(--color-success)' : '1px dashed #cbd5e0',
+                    textAlign: 'center',
+                    transition: 'all 0.3s ease'
+                  }}>
+                    <button
+                      className="button-primary"
+                      style={{
+                        padding: '0.4rem 0.8rem',
+                        fontSize: '0.75rem',
+                        background: projectState.inputs.problemSnapshots?.[item.id] ? 'var(--color-success)' : 'white',
+                        color: projectState.inputs.problemSnapshots?.[item.id] ? 'white' : 'var(--color-primary)',
+                        border: projectState.inputs.problemSnapshots?.[item.id] ? 'none' : '1px solid #cbd5e0',
+                        width: '100%'
+                      }}
+                      onClick={() => updateSnapshot(item.id, 'https://images.unsplash.com/photo-1513161455079-7dc1de15ef3e?auto=format&fit=crop&q=80&w=200')}
+                    >
+                      {projectState.inputs.problemSnapshots?.[item.id] ? '已上傳 ✓' : '上傳照片'}
+                    </button>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--color-muted)', marginTop: '0.5rem' }}>{item.detail}</div>
+                  </div>
+                ))}
+              </div>
+              {Object.values(projectState.inputs.problemSnapshots || {}).every(v => v !== null) && (
+                <div style={{ marginTop: '1.2rem', padding: '0.8rem', background: '#f0fff4', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <CheckCircle size={16} /> 師傅預判資料已齊備，將優先處理。
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="card">
@@ -706,189 +751,176 @@ function App() {
             )}
           </div>
 
-          <div className="card" style={{ borderTop: `6px solid ${projectState.documentType === 'BINDING_QUOTE' ? 'var(--color-success)' : 'var(--color-accent)'}` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <h2 style={{ marginBottom: '0.5rem' }}>{projectState.documentType === 'BINDING_QUOTE' ? 'Your Fixed Quote' : 'Your Professional Estimate'}</h2>
-                <div className="badge badge-success">Valid for 30 Days</div>
-              </div>
-              <ShieldCheck size={40} color={projectState.documentType === 'BINDING_QUOTE' ? 'var(--color-success)' : 'var(--color-accent)'} />
+          <div style={{ borderTop: '1px solid #eee', marginTop: '2rem', paddingTop: '1.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', marginBottom: '0.8rem' }}>
+              <CloudRain size={20} color="var(--color-primary)" />
+              <span style={{ fontWeight: 700 }}>Built-in Consumer Protection</span>
             </div>
-
-            <div style={{ marginTop: '2.5rem' }}>
-              <h4 style={{ marginBottom: '1rem', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>Transparent Cost Breakdown</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginTop: '1.5rem' }}>
-                <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '12px' }}>
-                  <h5 style={{ marginTop: 0, marginBottom: '0.8rem', color: 'var(--color-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Cost Breakdown</h5>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', fontSize: '0.85rem' }}>
-                    <div style={{ opacity: 0.8 }}>Professional Labour</div>
-                    <div style={{ textAlign: 'right', fontWeight: 600 }}>£{quoteData.labourCost.toLocaleString()}</div>
-                    <div style={{ opacity: 0.8 }}>Materials</div>
-                    <div style={{ textAlign: 'right', fontWeight: 600 }}>£{quoteData.materialsCost.toLocaleString()}</div>
-                    <div style={{ opacity: 0.8 }}>Logistics (Scaff/Skip)</div>
-                    <div style={{ textAlign: 'right', fontWeight: 600 }}>£{quoteData.logisticsCost.toLocaleString()}</div>
-                    <div style={{ opacity: 0.8 }}>Statutory Fees</div>
-                    <div style={{ textAlign: 'right', fontWeight: 600 }}>£{quoteData.statutoryFees.toLocaleString()}</div>
-                    {quoteData.approvedVariationCost > 0 && (
-                      <div style={{ gridColumn: 'span 2', color: 'var(--color-warning)', fontWeight: 600 }}>+ VO Applied: £{quoteData.approvedVariationCost.toLocaleString()}</div>
-                    )}
-                    <div style={{ gridColumn: 'span 2', borderTop: '1px solid #e2e8f0', marginTop: '0.4rem', paddingTop: '0.4rem', display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '1rem' }}>
-                      <span>Total:</span>
-                      <span>£{quoteData.totalCost.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ padding: '1rem', background: '#f0fff4', borderRadius: '12px' }}>
-                  <h5 style={{ marginTop: 0, marginBottom: '0.8rem', color: 'var(--color-success)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Timeline Summary</h5>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--color-primary)' }}>{quoteData.totalDurationDays} Days</div>
-                  <div style={{ fontSize: '0.8rem', marginTop: '0.4rem' }}>
-                    <strong>{quoteData.baseDuration}</strong> Base + <strong>{quoteData.approvedExtraDays}</strong> Variations
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
-                    + {quoteData.weatherContingencyDays} Days Weather Buffer
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
-                <p style={{ margin: 0, fontSize: '0.85rem', color: projectState.documentType === 'BINDING_QUOTE' ? 'var(--color-success)' : 'var(--color-warning)', fontWeight: 600 }}>
-                  {projectState.documentType === 'BINDING_QUOTE' ? (
-                    <span style={{ fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
-                      <ShieldCheck size={16} /> Price Locked & Guaranteed (BSA 2022)
-                    </span>
-                  ) : '⚠ Subject to Survey Variance (±20%)'}
-                </p>
-              </div>
-            </div>
-
-            <button className="button-primary" style={{ width: '100%', padding: '1.2rem', fontSize: '1.2rem' }} onClick={() => setShowConfirmModal(true)}>
-              Accept & Begin Live Tracking <ChevronRight size={24} />
-            </button>
-
-            {/* Confirmation Modal Overlay */}
-            {showConfirmModal && (
-              <div style={{
-                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                backgroundColor: 'rgba(27, 48, 34, 0.8)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                zIndex: 1000, padding: '1rem'
-              }}>
-                <div className="card" style={{ maxWidth: '500px', width: '100%', textAlign: 'center' }}>
-                  <ShieldCheck size={48} color="var(--color-primary)" style={{ margin: '0 auto 1rem' }} />
-                  <h2>Bilateral Agreement</h2>
-                  <p style={{ color: 'var(--color-muted)', fontSize: '0.95rem', textAlign: 'left', background: '#f8fafc', padding: '1rem', borderRadius: '8px' }}>
-                    I hereby accept the {projectState.documentType === 'BINDING_QUOTE' ? 'Fixed Binding Quote' : 'Project Estimate'} of <strong>£{quoteData.totalCost.toLocaleString()}</strong>.
-                    <br /><br />
-                    I understand that any "Variation Orders" (unexpected work) found during construction will be submitted as separate requests and will require my explicit digital approval prior to any price adjustment.
-                  </p>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem 0' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', textAlign: 'left' }}>
-                      <input
-                        type="checkbox"
-                        checked={agreedToTerms}
-                        onChange={(e) => setAgreedToTerms(e.target.checked)}
-                        style={{ width: '1.5rem', height: '1.5rem' }}
-                      />
-                      <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                        I agree to the Digital Work Authorization and CRA 2015 Terms.
-                      </span>
-                    </label>
-
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', textAlign: 'left' }}>
-                      <input
-                        type="checkbox"
-                        checked={agreedToGDPR}
-                        onChange={(e) => setAgreedToGDPR(e.target.checked)}
-                        style={{ width: '1.5rem', height: '1.5rem' }}
-                      />
-                      <span style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>
-                        I consent to UK GDPR photo processing for my property's 'Golden Thread' record.
-                      </span>
-                    </label>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                    <button
-                      className="button-primary"
-                      style={{ flex: 1, background: '#cbd5e0', color: '#4a5568' }}
-                      onClick={() => setShowConfirmModal(false)}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      className="button-primary"
-                      style={{ flex: 1 }}
-                      disabled={!agreedToTerms || !agreedToGDPR}
-                      onClick={() => {
-                        startProject();
-                        setShowConfirmModal(false);
-                      }}
-                    >
-                      Confirm Agreement
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div style={{ borderTop: '1px solid #eee', marginTop: '2rem', paddingTop: '1.5rem' }}>
-              <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center', marginBottom: '0.8rem' }}>
-                <CloudRain size={20} color="var(--color-primary)" />
-                <span style={{ fontWeight: 700 }}>Built-in Consumer Protection</span>
-              </div>
-              <p style={{ fontSize: '0.9rem', color: 'var(--color-muted)', margin: 0 }}>
-                You have a statutory 14-day cooling-off period. Our Weather-Lock™ system will monitor your local conditions to ensure materials are only laid in optimal weather.
-              </p>
-            </div>
+            <p style={{ fontSize: '0.9rem', color: 'var(--color-muted)', margin: 0 }}>
+              You have a statutory 14-day cooling-off period. Our Weather-Lock™ system will monitor your local conditions to ensure materials are only laid in optimal weather.
+            </p>
           </div>
+
+          {/* Confirmation Modal Overlay */}
+          {showConfirmModal && (
+            <div style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              backgroundColor: 'rgba(27, 48, 34, 0.8)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 1000, padding: '1rem'
+            }}>
+              <div className="card" style={{ maxWidth: '500px', width: '100%', textAlign: 'center' }}>
+                <ShieldCheck size={48} color="var(--color-primary)" style={{ margin: '0 auto 1rem' }} />
+                <h2>Bilateral Agreement</h2>
+                <p style={{ color: 'var(--color-muted)', fontSize: '0.95rem', textAlign: 'left', background: '#f8fafc', padding: '1rem', borderRadius: '8px' }}>
+                  I hereby accept the {projectState.documentType === 'BINDING_QUOTE' ? 'Fixed Binding Quote' : 'Project Estimate'} of <strong>£{quoteData.totalCost.toLocaleString()}</strong>.
+                  <br /><br />
+                  I understand that any "Variation Orders" (unexpected work) found during construction will be submitted as separate requests and will require my explicit digital approval prior to any price adjustment.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem 0' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', textAlign: 'left' }}>
+                    <input
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      style={{ width: '1.5rem', height: '1.5rem' }}
+                    />
+                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                      I agree to the Digital Work Authorization and CRA 2015 Terms.
+                    </span>
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', textAlign: 'left' }}>
+                    <input
+                      type="checkbox"
+                      checked={agreedToGDPR}
+                      onChange={(e) => setAgreedToGDPR(e.target.checked)}
+                      style={{ width: '1.5rem', height: '1.5rem' }}
+                    />
+                    <span style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>
+                      I consent to UK GDPR photo processing for my property's 'Golden Thread' record.
+                    </span>
+                  </label>
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                  <button
+                    className="button-primary"
+                    style={{ flex: 1, background: '#cbd5e0', color: '#4a5568' }}
+                    onClick={() => setShowConfirmModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="button-primary"
+                    style={{ flex: 1 }}
+                    disabled={!agreedToTerms || !agreedToGDPR}
+                    onClick={() => {
+                      startProject();
+                      setShowConfirmModal(false);
+                    }}
+                  >
+                    Confirm Agreement
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         <aside>
-          <div className="card" style={{ background: '#f8fafc' }}>
-            <h3 style={{ marginBottom: '1.2rem' }}>Safety & Standards</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div style={{ width: '40px', height: '40px', background: 'white', border: '1px solid #edf2f7', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <CloudRain color="var(--color-primary)" size={20} />
-                </div>
+          <div style={{ position: 'sticky', top: '1rem' }}>
+            <div className="card" style={{ borderTop: `6px solid ${projectState.documentType === 'BINDING_QUOTE' ? 'var(--color-success)' : 'var(--color-accent)'}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>BS 5534 Compliance</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--color-muted)' }}>Calculation logic based on local wind speeds (Wind Zone {projectState.fixingSpec?.zone || 'TBC'}).</div>
+                  <h2 style={{ marginBottom: '0.4rem', fontSize: '1.4rem' }}>{projectState.documentType === 'BINDING_QUOTE' ? 'Fixed Quote' : 'Live Estimate'}</h2>
+                  <div className="badge badge-success" style={{ fontSize: '0.65rem' }}>Price Lock Active</div>
+                </div>
+                <ShieldCheck size={32} color={projectState.documentType === 'BINDING_QUOTE' ? 'var(--color-success)' : 'var(--color-accent)'} />
+              </div>
+
+              <div style={{ marginTop: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '12px' }}>
+                <h5 style={{ margin: '0 0 0.8rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-muted)' }}>Project Cart (一鍵清單)</h5>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Professional Labour</span>
+                    <span style={{ fontWeight: 600 }}>£{quoteData.labourCost.toLocaleString()}</span>
+                  </div>
+                  {projectState.inputs.requiresScaffolding && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#3182ce' }}>
+                      <span>Logistics & Access</span>
+                      <span style={{ fontWeight: 600 }}>£{quoteData.logisticsCost.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {quoteData.statutoryFees > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-warning)' }}>
+                      <span>Statutory Licensing</span>
+                      <span style={{ fontWeight: 600 }}>£{quoteData.statutoryFees.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {(projectState.inputs.selectedRepairItems || []).map(id => (
+                    <div key={id} style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-accent)' }}>
+                      <span>{id.split('_').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ')}</span>
+                      <span style={{ fontWeight: 600 }}>+ Incl.</span>
+                    </div>
+                  ))}
+                  <div style={{ borderTop: '2px solid var(--color-primary)', marginTop: '0.5rem', paddingTop: '0.5rem', display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '1.2rem' }}>
+                    <span>PAYABLE</span>
+                    <span>£{quoteData.totalCost.toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div style={{ width: '40px', height: '40px', background: 'white', border: '1px solid #edf2f7', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <CreditCard color="var(--color-primary)" size={20} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Protected Payments</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--color-muted)' }}>Funds held securely. Releases split 30% / 40% / 30% for your safety.</div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', marginTop: '1.2rem' }}>
+                <div style={{ padding: '0.8rem', background: '#f0fff4', borderRadius: '10px', border: '1px solid #c6f6d5' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-primary)' }}>{quoteData.totalDurationDays} Days</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--color-muted)' }}>Expected Finish ({quoteData.weatherContingencyDays}d weather buffer)</div>
                 </div>
               </div>
+
+              <div style={{ marginTop: '1.2rem', textAlign: 'center', fontSize: '0.75rem', color: projectState.documentType === 'BINDING_QUOTE' ? 'var(--color-success)' : 'var(--color-warning)', fontWeight: 600 }}>
+                {projectState.documentType === 'BINDING_QUOTE' ? '✓ Price Locked (BSA 2022)' : '⚠ 20% Variance Possible'}
+              </div>
+
+              <button
+                className="button-primary"
+                style={{ width: '100%', marginTop: '1.2rem', padding: '1rem' }}
+                onClick={() => setShowConfirmModal(true)}
+              >
+                Accept & Begin <ChevronRight size={20} />
+              </button>
             </div>
-          </div>
 
-          <div className="card" style={{ background: 'var(--color-primary)', color: 'white' }}>
-            <h3 style={{ color: 'white' }}>Why Choose This Quote?</h3>
-            <p style={{ fontSize: '0.9rem', opacity: 0.9 }}>Every project on RoofTrust includes:</p>
-            <ul style={{ paddingLeft: '1.2rem', margin: '1rem 0', fontSize: '0.9rem' }}>
-              <li style={{ marginBottom: '0.6rem' }}>15-Year Golden Thread Audit</li>
-              <li style={{ marginBottom: '0.6rem' }}>BS 5534 Fixing Schedule</li>
-              <li style={{ marginBottom: '0.6rem' }}>Live Daily Progress Photos</li>
-              <li>Handover Compliance Pack</li>
-            </ul>
-          </div>
+            <div className="card" style={{ background: 'var(--color-primary)', color: 'white', padding: '1.5rem', marginTop: '-1rem' }}>
+              <h3 style={{ color: 'white', fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <ShieldCheck size={18} /> UK Safety Guarantee
+              </h3>
+              <ul style={{ margin: 0, padding: 0, listStyle: 'none', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                <li style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                  <CheckCircle size={14} color="#4ade80" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <span>Escrow Fund Protection: Payments held securely until sign-off.</span>
+                </li>
+                <li style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                  <CheckCircle size={14} color="#4ade80" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <span>£5M Public Liability Active: Underwritten by RoofTrust partners.</span>
+                </li>
+                <li style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                  <CheckCircle size={14} color="#4ade80" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <span>NFRC Gold Standard: All work BS 5534 & BS 8000 compliant.</span>
+                </li>
+              </ul>
+            </div>
 
-          <button
-            onClick={resetProject}
-            style={{ width: '100%', background: 'none', border: '1px solid var(--color-border)', color: 'var(--color-muted)', padding: '0.8rem', borderRadius: '12px', cursor: 'pointer', fontSize: '0.8rem' }}
-          >
-            Clear Data & Start New Quote
-          </button>
+            <button
+              onClick={resetProject}
+              style={{ width: '100%', background: 'none', border: '1px solid var(--color-border)', color: 'var(--color-muted)', padding: '0.8rem', borderRadius: '12px', cursor: 'pointer', fontSize: '0.8rem' }}
+            >
+              Clear Data & Start New Quote
+            </button>
+          </div>
         </aside>
-      </div >
+      </div>
 
       <footer style={{ marginTop: '4rem', paddingBottom: '3rem', textAlign: 'center', color: 'var(--color-muted)', fontSize: '0.85rem' }}>
         <p>RoofTrust UK © 2026 • The Standard for British Roofing</p>
