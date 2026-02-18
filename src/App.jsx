@@ -389,7 +389,12 @@ function App() {
             {allChecked && !finalBalanceReleased && (
               <div className="card" style={{ background: '#f0fff4', border: '2px solid var(--color-success)' }}>
                 <h3>Final Documentation</h3>
-                <p style={{ fontSize: '0.9rem' }}>Handover pack is ready. Once sent by contractor, final payment can be released.</p>
+                <p style={{ fontSize: '0.9rem' }}>
+                  Handover pack is ready. Once sent by contractor, final payment can be released.
+                </p>
+                <div style={{ background: '#f8fafc', padding: '0.8rem', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--color-muted)', marginBottom: '1rem', borderLeft: '4px solid var(--color-primary)' }}>
+                  <strong>UK GDPR Notice:</strong> This PDF serves as your full personal data export copy. It contains a complete immutable audit trail of all project sign-offs, photo evidence, and legally-binding timestamps.
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1rem' }}>
                   <button className="button-primary" onClick={() => {
                     const result = generateHandoverPack();
