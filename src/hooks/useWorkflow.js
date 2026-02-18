@@ -23,6 +23,11 @@ const INITIAL_STATE = {
         roof_area_sqm: 0,
         requiresScaffolding: false,
         isPublicPavement: false,
+        problemSnapshots: {
+            internal_leak: null,
+            loft_source: null,
+            exterior_panorama: null
+        }
     },
     project: {
         startDate: null,
@@ -215,6 +220,19 @@ export const useWorkflow = () => {
         }));
     }, []);
 
+    const updateSnapshot = useCallback((category, url) => {
+        setProjectState(prev => ({
+            ...prev,
+            inputs: {
+                ...prev.inputs,
+                problemSnapshots: {
+                    ...prev.inputs.problemSnapshots,
+                    [category]: url
+                }
+            }
+        }));
+    }, []);
+
     const uploadCredential = useCallback((imageUrl) => {
         setProjectState(prev => ({
             ...prev,
@@ -356,6 +374,7 @@ export const useWorkflow = () => {
         startProject,
         verifyScaffolding,
         uploadDailyPhoto,
+        updateSnapshot,
         requestPayment,
         releasePayment,
         updateChecklist,

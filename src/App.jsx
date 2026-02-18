@@ -14,6 +14,7 @@ function App() {
     startProject,
     verifyScaffolding,
     uploadDailyPhoto,
+    updateSnapshot,
     requestPayment,
     releasePayment,
     updateChecklist,
@@ -538,6 +539,60 @@ function App() {
 
       <div className="grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '3rem' }}>
         <section>
+          {/* Problem Snapshot Section */}
+          <div className="card" style={{ borderLeft: '6px solid var(--color-accent)', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', marginBottom: '1rem' }}>
+              <Camera color="var(--color-accent)" size={24} />
+              <h2 style={{ margin: 0 }}>Problem Snapshot</h2>
+            </div>
+            <p style={{ color: 'var(--color-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
+              幫助師傅在抵達前進行「遠端診斷」，這能大幅減少現場檢查時間，並讓報價更精準。
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+              {[
+                { id: 'internal_leak', label: '1. 室內/天花板', detail: '漏水潮濕點', icon: <Home size={20} /> },
+                { id: 'loft_source', label: '2. 閣樓內部', detail: '對應漏水位置', icon: <Box size={20} /> },
+                { id: 'exterior_panorama', label: '3. 房屋外觀', detail: '用於估算鷹架', icon: <Image size={20} /> }
+              ].map(item => (
+                <div key={item.id} style={{
+                  padding: '1rem',
+                  background: projectState.inputs.problemSnapshots?.[item.id] ? '#f0fff4' : '#f8fafc',
+                  borderRadius: '12px',
+                  border: projectState.inputs.problemSnapshots?.[item.id] ? '1px solid var(--color-success)' : '1px dashed #cbd5e0',
+                  textAlign: 'center',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <div style={{ color: projectState.inputs.problemSnapshots?.[item.id] ? 'var(--color-success)' : 'var(--color-muted)', marginBottom: '0.5rem' }}>
+                    {item.icon}
+                  </div>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{item.label}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', margin: '0.3rem 0 0.8rem' }}>{item.detail}</div>
+
+                  <button
+                    className="button-primary"
+                    style={{
+                      padding: '0.4rem 0.8rem',
+                      fontSize: '0.75rem',
+                      background: projectState.inputs.problemSnapshots?.[item.id] ? 'var(--color-success)' : 'white',
+                      color: projectState.inputs.problemSnapshots?.[item.id] ? 'white' : 'var(--color-primary)',
+                      border: projectState.inputs.problemSnapshots?.[item.id] ? 'none' : '1px solid #cbd5e0',
+                      width: '100%'
+                    }}
+                    onClick={() => updateSnapshot(item.id, 'https://images.unsplash.com/photo-1513161455079-7dc1de15ef3e?auto=format&fit=crop&q=80&w=200')}
+                  >
+                    {projectState.inputs.problemSnapshots?.[item.id] ? '已上傳 ✓' : '上傳照片'}
+                  </button>
+                </div>
+              ))}
+            </div>
+            {Object.values(projectState.inputs.problemSnapshots || {}).every(v => v !== null) && (
+              <div style={{ marginTop: '1.2rem', padding: '0.8rem', background: '#f0fff4', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <CheckCircle size={16} /> 師傅預判資料已齊備，將優先處理。
+              </div>
+            )}
+          </div>
+
           <div className="card">
             <h2>Project Specifications</h2>
             <div className="layman-tip">
