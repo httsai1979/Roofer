@@ -109,6 +109,7 @@ function App() {
     const finalStage = projectState.project.paymentStages.find(s => s.id === 'final');
     const finalBalanceReleased = finalStage.status === 'released';
     const canReleaseFinal = allChecked && projectState.project.handoverPackSent && finalStage.requested;
+    const hasPendingVariations = projectState.project.variations.some(v => v.status === 'pending_approval');
 
     return (
       <div className="roof-trust-container">
@@ -220,7 +221,7 @@ function App() {
             </section>
 
             {/* Variations Section */}
-            <section className="card variation-card">
+            <section className={`card variation-card ${hasPendingVariations ? 'pulse-pending' : ''}`}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2><AlertTriangle /> Variation Orders (Project Changes)</h2>
                 <div className="badge badge-warning">New Request Ability</div>
@@ -314,7 +315,7 @@ function App() {
                   <span>{auditProgress.count}/{auditProgress.total} Verified</span>
                 </div>
                 <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.2)', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ width: `${auditProgress.ratio * 100}%`, height: '100%', background: 'var(--color-success)', transition: 'width 0.5s ease' }}></div>
+                  <div className={auditProgress.ratio === 1 ? 'golden-progress-fill' : ''} style={{ width: `${auditProgress.ratio * 100}%`, height: '100%', background: 'var(--color-success)', transition: 'width 0.5s ease' }}></div>
                 </div>
               </div>
               <p style={{ opacity: 0.8, fontSize: '0.8rem' }}>Statutory photos for BSA 2022 compliance.</p>
@@ -512,7 +513,11 @@ function App() {
                   {quoteData.approvedVariationCost > 0 && ` + Variations: £${quoteData.approvedVariationCost.toLocaleString()}`}
                 </div>
                 <p style={{ margin: '0.4rem 0 0', fontSize: '0.85rem', color: projectState.documentType === 'BINDING_QUOTE' ? 'var(--color-success)' : 'var(--color-warning)', fontWeight: 600 }}>
-                  {projectState.documentType === 'BINDING_QUOTE' ? '✓ Price Locked' : '⚠ Subject to Survey Variance (±20%)'}
+                  {projectState.documentType === 'BINDING_QUOTE' ? (
+                    <span style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <ShieldCheck size={14} /> Price Locked
+                    </span>
+                  ) : '⚠ Subject to Survey Variance (±20%)'}
                 </p>
               </div>
               <div>
