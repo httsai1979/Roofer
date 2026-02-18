@@ -573,15 +573,15 @@ function App() {
               <h2 style={{ margin: 0 }}>Problem Snapshot</h2>
             </div>
             <p style={{ color: 'var(--color-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
-              幫助師傅在抵達前進行「遠端診斷」，這能大幅減少現場檢查時間，並讓報價更精準。
+              Help your contractor perform a 'Remote Diagnosis' before arrival. This drastically reduces on-site inspection time and ensures quote accuracy.
             </p>
 
             <div style={{ marginTop: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '1.5rem' }}>
                 {[
-                  { id: 'internal_leak', label: '1. 內部', icon: <Home size={28} />, detail: '天花板水印' },
-                  { id: 'loft_source', label: '2. 閣樓', icon: <Box size={28} />, detail: '對應位置' },
-                  { id: 'exterior_panorama', label: '3. 外觀', icon: <Image size={28} />, detail: '全景/鷹架' }
+                  { id: 'internal_leak', label: '1. Internal', icon: <Home size={28} />, detail: 'Ceiling marks' },
+                  { id: 'loft_source', label: '2. Loft', icon: <Box size={28} />, detail: 'Leak source' },
+                  { id: 'exterior_panorama', label: '3. Exterior', icon: <Image size={28} />, detail: 'Access/Roof' }
                 ].map(item => (
                   <div key={item.id} style={{ textAlign: 'center', opacity: projectState.inputs.problemSnapshots?.[item.id] ? 1 : 0.4 }}>
                     <div style={{
@@ -600,9 +600,9 @@ function App() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
                 {[
-                  { id: 'internal_leak', label: '室內/天花板', detail: '漏水潮濕點' },
-                  { id: 'loft_source', label: '閣樓內部', detail: '對應漏水位置' },
-                  { id: 'exterior_panorama', label: '房屋外觀', detail: '用於估算鷹架' }
+                  { id: 'internal_leak', label: 'Ceiling/Interior', detail: 'Visible damp patches' },
+                  { id: 'loft_source', label: 'Inside Loft', detail: 'Area above the leak' },
+                  { id: 'exterior_panorama', label: 'House Exterior', detail: 'For access planning' }
                 ].map(item => (
                   <div key={item.id} style={{
                     padding: '1rem',
@@ -622,9 +622,16 @@ function App() {
                         border: projectState.inputs.problemSnapshots?.[item.id] ? 'none' : '1px solid #cbd5e0',
                         width: '100%'
                       }}
-                      onClick={() => updateSnapshot(item.id, 'https://images.unsplash.com/photo-1513161455079-7dc1de15ef3e?auto=format&fit=crop&q=80&w=200')}
+                      onClick={() => {
+                        const mockUrls = [
+                          'https://images.unsplash.com/photo-1513161455079-7dc1de15ef3e?auto=format&fit=crop&q=80&w=400',
+                          'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=400',
+                          'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=400'
+                        ];
+                        updateSnapshot(item.id, mockUrls[Math.floor(Math.random() * mockUrls.length)]);
+                      }}
                     >
-                      {projectState.inputs.problemSnapshots?.[item.id] ? '已上傳 ✓' : '上傳照片'}
+                      {projectState.inputs.problemSnapshots?.[item.id] ? 'Uploaded ✓' : 'Add Photo'}
                     </button>
                     <div style={{ fontSize: '0.7rem', color: 'var(--color-muted)', marginTop: '0.5rem' }}>{item.detail}</div>
                   </div>
@@ -632,7 +639,7 @@ function App() {
               </div>
               {Object.values(projectState.inputs.problemSnapshots || {}).every(v => v !== null) && (
                 <div style={{ marginTop: '1.2rem', padding: '0.8rem', background: '#f0fff4', borderRadius: '8px', fontSize: '0.85rem', color: 'var(--color-success)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <CheckCircle size={16} /> 師傅預判資料已齊備，將優先處理。
+                  <CheckCircle size={16} /> Diagnosis data complete. This project will be prioritized.
                 </div>
               )}
             </div>
@@ -841,7 +848,7 @@ function App() {
               </div>
 
               <div style={{ marginTop: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '12px' }}>
-                <h5 style={{ margin: '0 0 0.8rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-muted)' }}>Project Cart (一鍵清單)</h5>
+                <h5 style={{ margin: '0 0 0.8rem', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-muted)' }}>Project Cart (Detailed Items)</h5>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Professional Labour</span>
