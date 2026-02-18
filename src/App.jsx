@@ -12,6 +12,7 @@ function App() {
     checkWeatherSafety,
     completeOnboarding,
     startProject,
+    verifyScaffolding,
     uploadDailyPhoto,
     requestPayment,
     releasePayment,
@@ -324,24 +325,48 @@ function App() {
                 <button
                   className="button-primary"
                   style={{ background: 'white', color: 'var(--color-primary)', fontSize: '0.75rem', padding: '0.5rem' }}
-                  onClick={() => uploadDailyPhoto('Insulation_Check')}
+                  onClick={() => {
+                    const res = uploadDailyPhoto('Insulation_Check');
+                    if (!res.success) alert(res.reason);
+                  }}
                 >
                   + Insulation
                 </button>
                 <button
                   className="button-primary"
                   style={{ background: 'white', color: 'var(--color-primary)', fontSize: '0.75rem', padding: '0.5rem' }}
-                  onClick={() => uploadDailyPhoto('Structural_Fixing')}
+                  onClick={() => {
+                    const res = uploadDailyPhoto('Structural_Fixing');
+                    if (!res.success) alert(res.reason);
+                  }}
                 >
                   + Structural
                 </button>
               </div>
 
+              {projectState.inputs.requiresScaffolding && (
+                <button
+                  className="button-primary"
+                  style={{ width: '100%', background: projectState.project.scaffoldingCertified ? 'var(--color-success)' : 'var(--color-warning)', color: 'white', marginTop: '0.8rem', border: 'none' }}
+                  disabled={projectState.project.scaffoldingCertified}
+                  onClick={() => {
+                    if (window.confirm("HSE LEGAL DECLARATION: I confirm the scaffolding has been inspected and a Handover Certificate (SG4:22) is issued/attached.")) {
+                      verifyScaffolding();
+                    }
+                  }}
+                >
+                  <ShieldCheck size={18} /> {projectState.project.scaffoldingCertified ? 'Scaffolding Certified ✓' : 'Upload HSE Handover Cert'}
+                </button>
+              )}
+
               <button
                 className="button-primary"
                 style={{ width: '100%', background: 'white', color: 'var(--color-primary)', marginTop: '0.8rem' }}
                 disabled={hasTodayLog}
-                onClick={() => uploadDailyPhoto('General')}
+                onClick={() => {
+                  const res = uploadDailyPhoto('General');
+                  if (!res.success) alert(res.reason);
+                }}
               >
                 <Camera size={18} /> {hasTodayLog ? 'Daily Log Verified ✓' : 'Upload General Photo'}
               </button>
@@ -493,6 +518,24 @@ function App() {
                 Checking the timber beams from the inside prevents hidden costs later. Required for a <strong>Fixed Price Guarantee</strong>.
               </div>
             </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '2rem' }}>
+              <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '16px', border: '1px solid #edf2f7' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={projectState.inputs.requiresScaffolding} onChange={(e) => updateInput('requiresScaffolding', e.target.checked)} style={{ width: '1.4rem', height: '1.4rem' }} />
+                  <span style={{ fontWeight: 700 }}>Scaffolding Required?</span>
+                </label>
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', marginTop: '0.4rem' }}>HSE Work at Height compliance.</p>
+              </div>
+
+              <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '16px', border: '1px solid #edf2f7' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={projectState.inputs.isPublicPavement} onChange={(e) => updateInput('isPublicPavement', e.target.checked)} style={{ width: '1.4rem', height: '1.4rem' }} />
+                  <span style={{ fontWeight: 700 }}>On Public Pavement?</span>
+                </label>
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', marginTop: '0.4rem' }}>Requires Local Council License.</p>
+              </div>
+            </div>
           </div>
 
           <div className="card" style={{ borderTop: `6px solid ${projectState.documentType === 'BINDING_QUOTE' ? 'var(--color-success)' : 'var(--color-accent)'}` }}>
@@ -509,7 +552,8 @@ function App() {
                 <div style={{ fontSize: '1rem', color: 'var(--color-muted)', marginBottom: '0.5rem' }}>Full Project Cost (Incl. Labour)</div>
                 <div style={{ fontSize: '2.5rem', fontWeight: 800 }}>£{quoteData.totalCost.toLocaleString()}</div>
                 <div style={{ fontSize: '0.85rem', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
-                  Original: £{quoteData.baseCost.toLocaleString()}
+                  Base: £{quoteData.baseCost.toLocaleString()}
+                  {quoteData.licenseFee > 0 && ` + License: £${quoteData.licenseFee.toLocaleString()}`}
                   {quoteData.approvedVariationCost > 0 && ` + Variations: £${quoteData.approvedVariationCost.toLocaleString()}`}
                 </div>
                 <p style={{ margin: '0.4rem 0 0', fontSize: '0.85rem', color: projectState.documentType === 'BINDING_QUOTE' ? 'var(--color-success)' : 'var(--color-warning)', fontWeight: 600 }}>

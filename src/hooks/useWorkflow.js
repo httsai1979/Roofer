@@ -20,11 +20,14 @@ const INITIAL_STATE = {
         loft_inspection_accessible: false,
         site_photos_count: 0,
         roof_area_sqm: 0,
+        requiresScaffolding: false,
+        isPublicPavement: false,
     },
     project: {
         startDate: null,
         dailyLogs: [],
         lastUpdateTimestamp: null,
+        scaffoldingCertified: false,
         paymentStages: [
             { id: 'deposit', label: '30% Deposit (Escrow)', percent: 30, status: 'pending', requested: false },
             { id: 'mid', label: '40% Interim Payment', percent: 40, status: 'pending', requested: false },
@@ -94,7 +97,7 @@ export const useWorkflow = () => {
     }, []);
 
     const calculateEstimate = useCallback(() => {
-        const { building_height_meters, roof_pitch_degrees, roof_area_sqm } = projectState.inputs;
+        const { building_height_meters, roof_pitch_degrees, roof_area_sqm, requiresScaffolding, isPublicPavement } = projectState.inputs;
         const fixingSpec = projectState.fixingSpec;
         const variations = projectState.project.variations || [];
 
@@ -109,17 +112,23 @@ export const useWorkflow = () => {
 
         const baseCost = baseRate * area * complexityFactor * windZoneFactor;
 
+        let licenseFee = 0;
+        if (requiresScaffolding && isPublicPavement) {
+            licenseFee = 350; // Estimated Local Council Pavement License
+        }
+
         // Approved variations
         const approvedVariations = variations.filter(v => v.status === 'approved');
         const approvedVariationCost = approvedVariations.reduce((sum, v) => sum + v.extraCost, 0);
         const approvedExtraDays = approvedVariations.reduce((sum, v) => sum + (v.daysAdded || 0), 0);
 
-        const totalCost = baseCost + approvedVariationCost;
+        const totalCost = baseCost + approvedVariationCost + licenseFee;
         const baseDuration = Math.ceil(5 * complexityFactor);
         const totalDurationDays = baseDuration + approvedExtraDays;
 
         return {
             baseCost,
+            licenseFee,
             approvedVariationCost,
             totalCost,
             baseDuration,
@@ -206,7 +215,19 @@ export const useWorkflow = () => {
         }));
     }, []);
 
+    const verifyScaffolding = useCallback(() => {
+        setProjectState(prev => ({
+            ...prev,
+            project: { ...prev.project, scaffoldingCertified: true }
+        }));
+    }, []);
+
     const uploadDailyPhoto = useCallback((tag = 'General') => {
+        // Gates daily log until scaffolding is certified if required
+        if (projectState.inputs.requiresScaffolding && !projectState.project.scaffoldingCertified) {
+            return { success: false, reason: "HSE Compliance Error: Scaffolding Handover Certificate required." };
+        }
+
         setProjectState(prev => ({
             ...prev,
             project: {
@@ -223,7 +244,8 @@ export const useWorkflow = () => {
                 lastUpdateTimestamp: Date.now()
             }
         }));
-    }, []);
+        return { success: true };
+    }, [projectState.inputs.requiresScaffolding, projectState.project.scaffoldingCertified]);
 
     const requestPayment = useCallback((stageId) => {
         setProjectState(prev => ({
@@ -306,6 +328,7 @@ export const useWorkflow = () => {
         checkWeatherSafety,
         completeOnboarding,
         startProject,
+        verifyScaffolding,
         uploadDailyPhoto,
         requestPayment,
         releasePayment,
