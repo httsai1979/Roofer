@@ -279,12 +279,24 @@ function App() {
                       <div>
                         <div style={{ fontWeight: 700 }}>£{v.extraCost.toLocaleString()} — {v.reason} ({v.daysAdded} Days Added)</div>
                         <div className="badge" style={{ marginTop: '0.4rem', fontSize: '0.7rem', display: 'inline-block' }}>{v.status.replace('_', ' ').toUpperCase()}</div>
+                        {v.homeownerMessage && (
+                          <div style={{ marginTop: '0.6rem', padding: '0.6rem', background: '#fff5f5', borderRadius: '6px', fontSize: '0.8rem', borderLeft: '3px solid var(--color-warning)' }}>
+                            <strong>Homeowner Feedback:</strong> {v.homeownerMessage}
+                          </div>
+                        )}
                       </div>
                     </div>
                     {v.status === 'pending_approval' && (
                       <div style={{ display: 'flex', gap: '0.6rem' }}>
                         <button className="button-primary" style={{ background: 'var(--color-success)', padding: '0.5rem 1rem' }} onClick={() => updateVariationStatus(v.id, 'approved')}>Approve</button>
-                        <button className="button-primary" style={{ background: 'var(--color-warning)', padding: '0.5rem 1rem' }} onClick={() => updateVariationStatus(v.id, 'rejected')}>Decline</button>
+                        <button className="button-primary" style={{ background: 'var(--color-warning)', padding: '0.5rem 1rem' }} onClick={() => {
+                          const message = window.prompt("Please state your query or reason for declining this variation:", "");
+                          if (message !== null && message.trim() !== "") {
+                            updateVariationStatus(v.id, 'rejected', message);
+                          } else if (message !== null) {
+                            alert("A reason is required to decline a variation. This helps the contractor provide a solution.");
+                          }
+                        }}>Decline</button>
                       </div>
                     )}
                   </div>

@@ -150,13 +150,13 @@ export const useWorkflow = () => {
         }));
     }, []);
 
-    const updateVariationStatus = useCallback((id, status) => {
+    const updateVariationStatus = useCallback((id, status, message = null) => {
         setProjectState(prev => ({
             ...prev,
             project: {
                 ...prev.project,
                 variations: prev.project.variations.map(v =>
-                    v.id === id ? { ...v, status } : v
+                    v.id === id ? { ...v, status, homeownerMessage: message } : v
                 )
             }
         }));
