@@ -13,21 +13,23 @@ function App() {
     completeOnboarding,
     startProject,
     uploadDailyPhoto,
+    requestPayment,
     releasePayment,
     updateChecklist,
     generateHandoverPack,
     sendHandoverEmail,
-    requestFinalPayment,
     resetProject,
     applyVariation,
     updateVariationStatus,
-    uploadCredential
+    uploadCredential,
+    auditProgress,
   } = useWorkflow();
 
-  const [onboardingForm, setOnboardingForm] = useState({ name: '', registration_number: '' });
-  const [variationForm, setVariationForm] = useState({ reason: '', cost: '', photoUrl: null });
+  const [onboardingForm, setOnboardingForm] = useState({ name: '', registration_number: '', gdprAgreed: false });
+  const [variationForm, setVariationForm] = useState({ reason: '', cost: '', days: 0, photoUrl: null });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [agreedToGDPR, setAgreedToGDPR] = useState(false);
 
   const handlePostcodeSearch = () => {
     if (projectState.inputs.postcode) {
@@ -77,7 +79,19 @@ function App() {
                 placeholder="NFRC-XXXXX or CompetentRoofer"
               />
             </div>
-            <button type="submit" className="button-primary" style={{ width: '100%' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox" required
+                  checked={onboardingForm.gdprAgreed}
+                  onChange={(e) => setOnboardingForm({ ...onboardingForm, gdprAgreed: e.target.checked })}
+                />
+                <span style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>
+                  I consent to the processing of property photos under <strong>UK GDPR</strong> for the purpose of the 'Golden Thread' audit trail.
+                </span>
+              </label>
+            </div>
+            <button type="submit" className="button-primary" style={{ width: '100%' }} disabled={!onboardingForm.gdprAgreed}>
               Register & Continue <ChevronRight size={18} />
             </button>
           </form>
@@ -92,8 +106,9 @@ function App() {
     const hoursSinceUpdate = projectState.project.lastUpdateTimestamp ? (Date.now() - projectState.project.lastUpdateTimestamp) / 3600000 : 0;
     const isOverdue = hoursSinceUpdate > 48;
     const allChecked = projectState.project.completionChecklist.every(item => item.checked);
-    const finalBalanceReleased = projectState.project.paymentStages.find(s => s.id === 'final').status === 'released';
-    const canReleaseFinal = allChecked && projectState.project.handoverPackSent && projectState.project.finalPaymentRequested;
+    const finalStage = projectState.project.paymentStages.find(s => s.id === 'final');
+    const finalBalanceReleased = finalStage.status === 'released';
+    const canReleaseFinal = allChecked && projectState.project.handoverPackSent && finalStage.requested;
 
     return (
       <div className="roof-trust-container">
@@ -143,18 +158,33 @@ function App() {
                       </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-                        <button
-                          className="button-primary"
-                          disabled={stage.id === 'final' && !canReleaseFinal}
-                          onClick={() => releasePayment(stage.id)}
-                          style={{ padding: '0.6rem 1.2rem', fontSize: '0.9rem' }}
-                        >
-                          {stage.id === 'final' && !canReleaseFinal ? 'Locked' : 'Release Funds'}
-                        </button>
-                        {stage.id === 'final' && canReleaseFinal && (
+                        {!stage.requested ? (
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              className="button-primary"
+                              onClick={() => requestPayment(stage.id)}
+                              style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', background: 'var(--color-accent)' }}
+                            >
+                              Request Stage Funds
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            className="button-primary"
+                            disabled={stage.id === 'final' && !canReleaseFinal}
+                            onClick={() => releasePayment(stage.id)}
+                            style={{ padding: '0.6rem 1.2rem', fontSize: '0.9rem' }}
+                          >
+                            Release Funds
+                          </button>
+                        )}
+                        {stage.id === 'final' && canReleaseFinal && stage.requested && (
                           <span style={{ fontSize: '0.7rem', color: 'var(--color-muted)', textAlign: 'right', maxWidth: '180px' }}>
                             * Clicking confirms satisfaction with works and receipt of warranty pack.
                           </span>
+                        )}
+                        {stage.requested && stage.status !== 'released' && (
+                          <span style={{ fontSize: '0.7rem', color: 'var(--color-success)', fontWeight: 600 }}>Awaiting Release ✓</span>
                         )}
                       </div>
                     )}
@@ -206,8 +236,12 @@ function App() {
                     value={variationForm.reason} onChange={(e) => setVariationForm({ ...variationForm, reason: e.target.value })}
                   />
                   <input
-                    type="number" className="input-field" placeholder="Cost (£)" style={{ maxWidth: '120px' }}
+                    type="number" className="input-field" placeholder="Cost (£)" style={{ maxWidth: '100px' }}
                     value={variationForm.cost} onChange={(e) => setVariationForm({ ...variationForm, cost: e.target.value })}
+                  />
+                  <input
+                    type="number" className="input-field" placeholder="+ Days" style={{ maxWidth: '80px' }}
+                    value={variationForm.days} onChange={(e) => setVariationForm({ ...variationForm, days: parseInt(e.target.value) })}
                   />
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -223,8 +257,8 @@ function App() {
                     disabled={!variationForm.reason || !variationForm.cost || !variationForm.photoUrl}
                     style={{ flex: 1 }}
                     onClick={() => {
-                      applyVariation(variationForm.reason, parseFloat(variationForm.cost), variationForm.photoUrl);
-                      setVariationForm({ reason: '', cost: '', photoUrl: null });
+                      applyVariation(variationForm.reason, parseFloat(variationForm.cost), variationForm.photoUrl, variationForm.days);
+                      setVariationForm({ reason: '', cost: '', days: 0, photoUrl: null });
                     }}
                   >
                     Submit Variation Request
@@ -243,7 +277,7 @@ function App() {
                         </div>
                       )}
                       <div>
-                        <div style={{ fontWeight: 700 }}>£{v.extraCost.toLocaleString()} — {v.reason}</div>
+                        <div style={{ fontWeight: 700 }}>£{v.extraCost.toLocaleString()} — {v.reason} ({v.daysAdded} Days Added)</div>
                         <div className="badge" style={{ marginTop: '0.4rem', fontSize: '0.7rem', display: 'inline-block' }}>{v.status.replace('_', ' ').toUpperCase()}</div>
                       </div>
                     </div>
@@ -261,8 +295,17 @@ function App() {
 
           <aside>
             <div className="card" style={{ background: 'var(--color-primary)', color: 'white' }}>
-              <h3 style={{ color: 'white' }}><HardHat /> Workday Log</h3>
-              <p style={{ opacity: 0.8, fontSize: '0.9rem' }}>Select category and upload photo for the 'Golden Thread' audit.</p>
+              <h3 style={{ color: 'white' }}><HardHat /> Golden Thread Progress</h3>
+              <div style={{ margin: '1rem 0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.4rem' }}>
+                  <span>Regulatory Evidence</span>
+                  <span>{auditProgress.count}/{auditProgress.total} Verified</span>
+                </div>
+                <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.2)', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ width: `${auditProgress.ratio * 100}%`, height: '100%', background: 'var(--color-success)', transition: 'width 0.5s ease' }}></div>
+                </div>
+              </div>
+              <p style={{ opacity: 0.8, fontSize: '0.8rem' }}>Statutory photos for BSA 2022 compliance.</p>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '1rem' }}>
                 <button
@@ -446,8 +489,13 @@ function App() {
               </div>
               <div>
                 <div style={{ fontSize: '1rem', color: 'var(--color-muted)', marginBottom: '0.5rem' }}>Expected Completion</div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 800 }}>{quoteData.durationDays} Days</div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--color-success)', fontWeight: 600 }}>+ {quoteData.weatherContingencyDays} Days Weather Safety Buffer</div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 800 }}>{quoteData.totalDurationDays} Days</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--color-success)', fontWeight: 600 }}>
+                  Includes {quoteData.approvedExtraDays} days approved variations
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-muted)', marginTop: '0.2rem' }}>
+                  + {quoteData.weatherContingencyDays} Days Weather Buffer
+                </div>
               </div>
             </div>
 
@@ -472,17 +520,31 @@ function App() {
                     I understand that any "Variation Orders" (unexpected work) found during construction will be submitted as separate requests and will require my explicit digital approval prior to any price adjustment.
                   </p>
 
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 0', cursor: 'pointer', textAlign: 'left' }}>
-                    <input
-                      type="checkbox"
-                      checked={agreedToTerms}
-                      onChange={(e) => setAgreedToTerms(e.target.checked)}
-                      style={{ width: '1.5rem', height: '1.5rem' }}
-                    />
-                    <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                      I agree to the Digital Work Authorization and CRA 2015 Terms.
-                    </span>
-                  </label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem 0' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', textAlign: 'left' }}>
+                      <input
+                        type="checkbox"
+                        checked={agreedToTerms}
+                        onChange={(e) => setAgreedToTerms(e.target.checked)}
+                        style={{ width: '1.5rem', height: '1.5rem' }}
+                      />
+                      <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                        I agree to the Digital Work Authorization and CRA 2015 Terms.
+                      </span>
+                    </label>
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', textAlign: 'left' }}>
+                      <input
+                        type="checkbox"
+                        checked={agreedToGDPR}
+                        onChange={(e) => setAgreedToGDPR(e.target.checked)}
+                        style={{ width: '1.5rem', height: '1.5rem' }}
+                      />
+                      <span style={{ fontSize: '0.85rem', color: 'var(--color-muted)' }}>
+                        I consent to UK GDPR photo processing for my property's 'Golden Thread' record.
+                      </span>
+                    </label>
+                  </div>
 
                   <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                     <button
@@ -495,7 +557,7 @@ function App() {
                     <button
                       className="button-primary"
                       style={{ flex: 1 }}
-                      disabled={!agreedToTerms}
+                      disabled={!agreedToTerms || !agreedToGDPR}
                       onClick={() => {
                         startProject();
                         setShowConfirmModal(false);

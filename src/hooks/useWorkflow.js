@@ -26,9 +26,9 @@ const INITIAL_STATE = {
         dailyLogs: [],
         lastUpdateTimestamp: null,
         paymentStages: [
-            { id: 'deposit', label: '30% Deposit (Escrow)', percent: 30, status: 'pending' },
-            { id: 'mid', label: '40% Interim Payment', percent: 40, status: 'pending' },
-            { id: 'final', label: '30% Final Balance', percent: 30, status: 'pending' },
+            { id: 'deposit', label: '30% Deposit (Escrow)', percent: 30, status: 'pending', requested: false },
+            { id: 'mid', label: '40% Interim Payment', percent: 40, status: 'pending', requested: false },
+            { id: 'final', label: '30% Final Balance', percent: 30, status: 'pending', requested: false },
         ],
         completionChecklist: [
             { id: 'c1', label: 'Site cleared of debris', checked: false },
@@ -36,10 +36,9 @@ const INITIAL_STATE = {
             { id: 'c3', label: 'All tiles properly fixed (BS 5534)', checked: false },
             { id: 'c4', label: 'Photographic evidence verified', checked: false },
         ],
-        variations: [], // { id, reason, extraCost, status: 'pending_approval' | 'approved' | 'rejected' }
+        variations: [], // { id, reason, extraCost, daysAdded, status: 'pending_approval' | 'approved' | 'rejected' }
         handoverPackGenerated: false,
         handoverPackSent: false,
-        finalPaymentRequested: false,
     },
     milestones: [],
     weather: {
@@ -57,6 +56,8 @@ export const useWorkflow = () => {
         const saved = localStorage.getItem(STORAGE_KEY);
         return saved ? JSON.parse(saved) : INITIAL_STATE;
     });
+
+    const MANDATORY_PHOTO_CATEGORIES = useMemo(() => ['Insulation_Check', 'Structural_Fixing'], []);
 
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(projectState));
@@ -108,24 +109,27 @@ export const useWorkflow = () => {
 
         const baseCost = baseRate * area * complexityFactor * windZoneFactor;
 
-        // Add approved variation costs
-        const approvedVariationCost = variations
-            .filter(v => v.status === 'approved')
-            .reduce((sum, v) => sum + v.extraCost, 0);
+        // Approved variations
+        const approvedVariations = variations.filter(v => v.status === 'approved');
+        const approvedVariationCost = approvedVariations.reduce((sum, v) => sum + v.extraCost, 0);
+        const approvedExtraDays = approvedVariations.reduce((sum, v) => sum + (v.daysAdded || 0), 0);
 
         const totalCost = baseCost + approvedVariationCost;
-        const durationDays = Math.ceil(5 * complexityFactor);
+        const baseDuration = Math.ceil(5 * complexityFactor);
+        const totalDurationDays = baseDuration + approvedExtraDays;
 
         return {
             baseCost,
             approvedVariationCost,
             totalCost,
-            durationDays,
-            weatherContingencyDays: Math.ceil(durationDays * 0.25)
+            baseDuration,
+            approvedExtraDays,
+            totalDurationDays,
+            weatherContingencyDays: Math.ceil(totalDurationDays * 0.25)
         };
     }, [projectState.inputs, projectState.fixingSpec, projectState.project.variations]);
 
-    const applyVariation = useCallback((reason, extraCost, photoUrl) => {
+    const applyVariation = useCallback((reason, extraCost, photoUrl, daysAdded = 0) => {
         setProjectState(prev => ({
             ...prev,
             project: {
@@ -136,6 +140,7 @@ export const useWorkflow = () => {
                         id: Date.now(),
                         reason,
                         extraCost,
+                        daysAdded,
                         photoUrl,
                         status: 'pending_approval',
                         photoRequired: true
@@ -201,8 +206,6 @@ export const useWorkflow = () => {
         }));
     }, []);
 
-    const MANDATORY_PHOTO_CATEGORIES = ['Insulation_Check', 'Structural_Fixing'];
-
     const uploadDailyPhoto = useCallback((tag = 'General') => {
         setProjectState(prev => ({
             ...prev,
@@ -218,6 +221,18 @@ export const useWorkflow = () => {
                     }
                 ],
                 lastUpdateTimestamp: Date.now()
+            }
+        }));
+    }, []);
+
+    const requestPayment = useCallback((stageId) => {
+        setProjectState(prev => ({
+            ...prev,
+            project: {
+                ...prev.project,
+                paymentStages: prev.project.paymentStages.map(s =>
+                    s.id === stageId ? { ...s, requested: true } : s
+                )
             }
         }));
     }, []);
@@ -259,7 +274,7 @@ export const useWorkflow = () => {
             project: { ...prev.project, handoverPackGenerated: true }
         }));
         return { success: true };
-    }, [projectState.project.dailyLogs]);
+    }, [projectState.project.dailyLogs, MANDATORY_PHOTO_CATEGORIES]);
 
     const sendHandoverEmail = useCallback(() => {
         setProjectState(prev => ({
@@ -268,13 +283,15 @@ export const useWorkflow = () => {
         }));
     }, []);
 
-    const requestFinalPayment = useCallback(() => {
-        if (!projectState.project.handoverPackSent) return;
-        setProjectState(prev => ({
-            ...prev,
-            project: { ...prev.project, finalPaymentRequested: true }
-        }));
-    }, [projectState.project.handoverPackSent]);
+    const auditProgress = useMemo(() => {
+        const uploadedTags = projectState.project.dailyLogs.map(log => log.tag);
+        const count = MANDATORY_PHOTO_CATEGORIES.filter(cat => uploadedTags.includes(cat)).length;
+        return {
+            count,
+            total: MANDATORY_PHOTO_CATEGORIES.length,
+            ratio: count / MANDATORY_PHOTO_CATEGORIES.length
+        };
+    }, [projectState.project.dailyLogs, MANDATORY_PHOTO_CATEGORIES]);
 
     const resetProject = useCallback(() => {
         setProjectState(INITIAL_STATE);
@@ -290,15 +307,16 @@ export const useWorkflow = () => {
         completeOnboarding,
         startProject,
         uploadDailyPhoto,
+        requestPayment,
         releasePayment,
         updateChecklist,
         generateHandoverPack,
         sendHandoverEmail,
-        requestFinalPayment,
         uploadCredential,
         resetProject,
         applyVariation,
         updateVariationStatus,
+        auditProgress,
         config: currentPhaseConfig,
     };
 };
