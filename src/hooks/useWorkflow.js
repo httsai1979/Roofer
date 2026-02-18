@@ -11,6 +11,7 @@ const INITIAL_STATE = {
         onboardingCompleted: false,
         verificationStatus: 'unverified',
         credentialImage: null,
+        insuranceExpiry: null, // ISO Date String
     },
     phase: 'phase_0_onboarding',
     inputs: {
@@ -65,6 +66,13 @@ export const useWorkflow = () => {
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(projectState));
     }, [projectState]);
+
+    const isInsuranceValid = useMemo(() => {
+        if (!projectState.contractor.insuranceExpiry) return false;
+        const expiry = new Date(projectState.contractor.insuranceExpiry);
+        const today = new Date();
+        return expiry > today;
+    }, [projectState.contractor.insuranceExpiry]);
 
     const currentPhaseConfig = useMemo(() =>
         rules.workflows[projectState.phase] || {},
@@ -248,6 +256,11 @@ export const useWorkflow = () => {
     }, [projectState.inputs.requiresScaffolding, projectState.project.scaffoldingCertified]);
 
     const requestPayment = useCallback((stageId) => {
+        // Dynamic Insurance Check
+        if (!isInsuranceValid) {
+            return { success: false, reason: "Contractor's Public Liability Insurance has expired; work must pause for compliance check." };
+        }
+
         setProjectState(prev => ({
             ...prev,
             project: {
@@ -257,7 +270,8 @@ export const useWorkflow = () => {
                 )
             }
         }));
-    }, []);
+        return { success: true };
+    }, [isInsuranceValid]);
 
     const releasePayment = useCallback((stageId) => {
         setProjectState(prev => ({
@@ -322,6 +336,7 @@ export const useWorkflow = () => {
 
     return {
         projectState,
+        isInsuranceValid,
         updateInput,
         calculateWindUplift,
         calculateEstimate,

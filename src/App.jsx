@@ -26,11 +26,12 @@ function App() {
     auditProgress,
   } = useWorkflow();
 
-  const [onboardingForm, setOnboardingForm] = useState({ name: '', registration_number: '', gdprAgreed: false });
+  const [onboardingForm, setOnboardingForm] = useState({ name: '', registration_number: '', insuranceExpiry: '', gdprAgreed: false });
   const [variationForm, setVariationForm] = useState({ reason: '', cost: '', days: 0, photoUrl: null });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [agreedToGDPR, setAgreedToGDPR] = useState(false);
+  const { isInsuranceValid } = useWorkflow();
 
   const handlePostcodeSearch = () => {
     if (projectState.inputs.postcode) {
@@ -80,6 +81,15 @@ function App() {
                 placeholder="NFRC-XXXXX or CompetentRoofer"
               />
             </div>
+            <div style={{ marginBottom: '1.2rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 600 }}>Public Liability Insurance Expiry</label>
+              <input
+                type="date" required className="input-field"
+                value={onboardingForm.insuranceExpiry}
+                onChange={(e) => setOnboardingForm({ ...onboardingForm, insuranceExpiry: e.target.value })}
+              />
+              <p style={{ fontSize: '0.7rem', color: 'var(--color-muted)', marginTop: '0.4rem' }}>HSE Requirements: Min £5M Coverage</p>
+            </div>
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', cursor: 'pointer' }}>
                 <input
@@ -111,6 +121,7 @@ function App() {
     const finalBalanceReleased = finalStage.status === 'released';
     const canReleaseFinal = allChecked && projectState.project.handoverPackSent && finalStage.requested;
     const hasPendingVariations = projectState.project.variations.some(v => v.status === 'pending_approval');
+    const insuranceExpired = !isInsuranceValid;
 
     return (
       <div className="roof-trust-container">
@@ -129,6 +140,20 @@ function App() {
               <div>
                 <h3 style={{ color: '#c53030', margin: 0 }}>Contractor Update Overdue</h3>
                 <p style={{ margin: '0.4rem 0 0', fontSize: '0.95rem' }}>No project photos or logs received in the last 48 hours. An automated delay notification has been logged.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {insuranceExpired && (
+          <div className="card" style={{ background: '#fff5f5', border: '2px solid #e53e3e', animation: 'pulse-border 2s infinite' }}>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <ShieldCheck color="#e53e3e" size={32} />
+              <div>
+                <h3 style={{ color: '#c53030', margin: 0 }}>HSE COMPLIANCE ALARM: Insurance Expired</h3>
+                <p style={{ margin: '0.4rem 0 0', fontSize: '1rem', fontWeight: 600 }}>
+                  Contractor's Public Liability Insurance has expired; work must pause for compliance check. Payment requests are locked.
+                </p>
               </div>
             </div>
           </div>
@@ -164,8 +189,11 @@ function App() {
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button
                               className="button-primary"
-                              onClick={() => requestPayment(stage.id)}
-                              style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', background: 'var(--color-accent)' }}
+                              onClick={() => {
+                                const res = requestPayment(stage.id);
+                                if (!res.success) alert(res.reason);
+                              }}
+                              style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', background: isInsuranceValid ? 'var(--color-accent)' : '#cbd5e0' }}
                             >
                               Request Stage Funds
                             </button>
