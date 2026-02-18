@@ -23,6 +23,8 @@ const INITIAL_STATE = {
         roof_area_sqm: 0,
         requiresScaffolding: false,
         isPublicPavement: false,
+        sharedParapet: false,
+        selectedRepairItems: [], // ['COPING_REPLACEMENT', 'CODE_5_LEAD']
         problemSnapshots: {
             internal_leak: null,
             loft_source: null,
@@ -110,7 +112,7 @@ export const useWorkflow = () => {
     }, []);
 
     const calculateEstimate = useCallback(() => {
-        const { building_height_meters, roof_pitch_degrees, roof_area_sqm, requiresScaffolding, isPublicPavement } = projectState.inputs;
+        const { building_height_meters, roof_pitch_degrees, roof_area_sqm, requiresScaffolding, isPublicPavement, sharedParapet, selectedRepairItems = [] } = projectState.inputs;
         const fixingSpec = projectState.fixingSpec;
         const variations = projectState.project.variations || [];
 
@@ -127,11 +129,24 @@ export const useWorkflow = () => {
 
         // Transparent Breakdown Logic
         const labourCost = baseCost * 0.65;
-        const materialsCost = baseCost * 0.35;
+        let materialsCost = baseCost * 0.35;
+
+        // 2026 Specialized Repair Items
+        let repairItemsCost = 0;
+        if (selectedRepairItems.includes('COPING_REPLACEMENT')) repairItemsCost += (area * 0.15) * 135; // York Stone Coping @ £135/m
+        if (selectedRepairItems.includes('CODE_5_LEAD')) repairItemsCost += (area * 0.1) * 150; // Code 5 Lead @ £150/m
+
+        materialsCost += repairItemsCost;
 
         let statutoryFees = 0;
+        let statutoryWarnings = [];
         if (requiresScaffolding && isPublicPavement) {
-            statutoryFees = 350; // Local Council Pavement License
+            statutoryFees = 648; // 2026 Rate: Public Highway Scaffolding License
+            statutoryWarnings.push("Regulatory Alert: 28-day Local Council lead time required for Public Highway occupation.");
+        }
+
+        if (sharedParapet) {
+            statutoryWarnings.push("Legal Requirement: Party Wall etc. Act 1996 Notice must be served to neighbor.");
         }
 
         let logisticsCost = 0;
@@ -153,6 +168,7 @@ export const useWorkflow = () => {
             materialsCost,
             logisticsCost,
             statutoryFees,
+            statutoryWarnings,
             approvedVariationCost,
             totalCost,
             baseDuration,

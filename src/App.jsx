@@ -648,11 +648,62 @@ function App() {
               <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '16px', border: '1px solid #edf2f7' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
                   <input type="checkbox" checked={projectState.inputs.isPublicPavement} onChange={(e) => updateInput('isPublicPavement', e.target.checked)} style={{ width: '1.4rem', height: '1.4rem' }} />
-                  <span style={{ fontWeight: 700 }}>On Public Pavement?</span>
+                  <span style={{ fontWeight: 700 }}>On Public Highway?</span>
                 </label>
-                <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', marginTop: '0.4rem' }}>Requires Local Council License.</p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', marginTop: '0.4rem' }}>Requires £648 Council License.</p>
               </div>
             </div>
+
+            <div style={{ marginTop: '2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div style={{ padding: '1.5rem', background: projectState.inputs.sharedParapet ? '#fff5f5' : '#f8fafc', borderRadius: '16px', border: projectState.inputs.sharedParapet ? '1px solid #feb2b2' : '1px solid #edf2f7' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={projectState.inputs.sharedParapet} onChange={(e) => updateInput('sharedParapet', e.target.checked)} style={{ width: '1.4rem', height: '1.4rem' }} />
+                  <span style={{ fontWeight: 700 }}>Shared Parapet Wall?</span>
+                </label>
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-muted)', marginTop: '0.4rem' }}>Triggers Party Wall Act 1996.</p>
+              </div>
+
+              <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '16px', border: '1px solid #edf2f7' }}>
+                <label style={{ display: 'block', marginBottom: '0.8rem', fontWeight: 700 }}>Specialized Repairs</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {[
+                    { id: 'COPING_REPLACEMENT', label: 'Coping replacement' },
+                    { id: 'CODE_5_LEAD', label: 'Code 5 Leadwork' }
+                  ].map(item => (
+                    <button
+                      key={item.id}
+                      style={{
+                        padding: '0.4rem 0.8rem',
+                        fontSize: '0.7rem',
+                        borderRadius: '20px',
+                        border: '1px solid var(--color-primary)',
+                        background: projectState.inputs.selectedRepairItems?.includes(item.id) ? 'var(--color-primary)' : 'white',
+                        color: projectState.inputs.selectedRepairItems?.includes(item.id) ? 'white' : 'var(--color-primary)',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => {
+                        const current = projectState.inputs.selectedRepairItems || [];
+                        const next = current.includes(item.id) ? current.filter(x => x !== item.id) : [...current, item.id];
+                        updateInput('selectedRepairItems', next);
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {quoteData.statutoryWarnings?.length > 0 && (
+              <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#fff5f5', borderRadius: '12px', border: '1px solid #feb2b2' }}>
+                <h4 style={{ color: '#c53030', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: 0, marginBottom: '0.5rem' }}>
+                  <AlertTriangle size={16} /> Statutory Compliance Notifications
+                </h4>
+                <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem', color: '#9b2c2c' }}>
+                  {quoteData.statutoryWarnings.map((w, idx) => <li key={idx} style={{ marginBottom: '0.2rem' }}>{w}</li>)}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div className="card" style={{ borderTop: `6px solid ${projectState.documentType === 'BINDING_QUOTE' ? 'var(--color-success)' : 'var(--color-accent)'}` }}>
